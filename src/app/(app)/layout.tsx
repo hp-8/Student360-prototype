@@ -11,9 +11,9 @@ export default async function AppLayout({
   const session = await requireUser();
 
   return (
-    <div className="flex flex-col flex-1">
+    <div className="flex flex-col h-screen overflow-hidden">
       <AppHeader session={session} />
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
+      <main className="flex-1 min-h-0 max-w-6xl w-full mx-auto px-4 py-5 overflow-y-auto">
         {children}
       </main>
       {modal}

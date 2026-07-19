@@ -217,6 +217,7 @@ model User {
   documentsVerified        Document[]            @relation("DocumentVerifiedBy")
   visaEventsLogged         VisaEvent[]           @relation("VisaEventCreatedBy")
   countryConfirmationsMade CountryConfirmation[] @relation("CountryConfirmationBy")
+  auditLogsAuthored        AuditLog[]            @relation("AuditLogActor")
 }
 
 model Country {
@@ -338,6 +339,7 @@ model Student {
   notes                Note[]
   learningEnrollments  LearningEnrollment[]
   testAttempts         TestAttempt[]
+  auditLogs            AuditLog[]
 }
 
 model CaseAssignment {
@@ -615,6 +617,23 @@ model Note {
 // =========================================================================
 // LEARNING SERVICES (schema only, no dedicated UI)
 // =========================================================================
+
+// =========================================================================
+// ACTIVITY LOG (append-only feed, visibility scoped to case access)
+// =========================================================================
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  studentId  String
+  actorId    String
+  action     String
+  entityType String
+  entityId   String?
+  createdAt  DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  actor   User    @relation("AuditLogActor", fields: [actorId], references: [id])
+}
 
 model LearningEnrollment {
   id          String                   @id @default(cuid())

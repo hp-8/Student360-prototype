@@ -72,12 +72,14 @@ const BADGE_COLORS: Record<string, string> = {
   purple: "bg-violet-50 text-violet-700 ring-1 ring-violet-600/15",
 };
 
+export type BadgeColor = keyof typeof BADGE_COLORS;
+
 export function Badge({
   children,
   color = "slate",
 }: {
   children: ReactNode;
-  color?: keyof typeof BADGE_COLORS;
+  color?: BadgeColor;
 }) {
   return (
     <span
