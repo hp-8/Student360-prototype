@@ -3,8 +3,10 @@ import { AppHeader } from "@/components/AppHeader";
 
 export default async function AppLayout({
   children,
+  modal,
 }: {
   children: React.ReactNode;
+  modal: React.ReactNode;
 }) {
   const session = await requireUser();
 
@@ -14,6 +16,7 @@ export default async function AppLayout({
       <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-6">
         {children}
       </main>
+      {modal}
     </div>
   );
 }

@@ -25,8 +25,17 @@ export async function newEnquiryAction(
   const email = String(formData.get("email") ?? "").trim() || null;
   const source = String(formData.get("source") ?? "").trim() || null;
   const branchId = String(formData.get("branchId") ?? "");
-  const educationSnapshot =
-    String(formData.get("educationSnapshot") ?? "").trim() || null;
+  const fatherName = String(formData.get("fatherName") ?? "").trim() || null;
+  const motherName = String(formData.get("motherName") ?? "").trim() || null;
+  const schoolName = String(formData.get("schoolName") ?? "").trim();
+  const percentageReceivedRaw = String(formData.get("percentageReceived") ?? "").trim();
+  const universityAttended = String(formData.get("universityAttended") ?? "").trim() || null;
+  const intendedCountryId = String(formData.get("intendedCountryId") ?? "") || null;
+  const ieltsAttempted = formData.get("ieltsAttempted") === "true";
+  const ieltsScore = ieltsAttempted
+    ? String(formData.get("ieltsScore") ?? "").trim() || null
+    : null;
+  const additionalNotes = String(formData.get("additionalNotes") ?? "").trim() || null;
   const confirmed = formData.get("confirmed") === "true";
 
   const values = {
@@ -36,11 +45,33 @@ export async function newEnquiryAction(
     email: email ?? "",
     source: source ?? "",
     branchId,
-    educationSnapshot: educationSnapshot ?? "",
+    fatherName: fatherName ?? "",
+    motherName: motherName ?? "",
+    schoolName,
+    percentageReceived: percentageReceivedRaw,
+    universityAttended: universityAttended ?? "",
+    intendedCountryId: intendedCountryId ?? "",
+    ieltsAttempted: String(ieltsAttempted),
+    ieltsScore: ieltsScore ?? "",
+    additionalNotes: additionalNotes ?? "",
   };
 
-  if (!firstName || !lastName || !phone || !branchId) {
-    return { error: "First name, last name, phone and branch are required.", values };
+  const percentageReceived = Number(percentageReceivedRaw);
+
+  if (
+    !firstName ||
+    !lastName ||
+    !phone ||
+    !branchId ||
+    !schoolName ||
+    !percentageReceivedRaw ||
+    Number.isNaN(percentageReceived)
+  ) {
+    return {
+      error:
+        "First name, last name, phone, branch, school name and % received are all required.",
+      values,
+    };
   }
 
   if (!confirmed) {
@@ -70,7 +101,23 @@ export async function newEnquiryAction(
   }
 
   await createLead(
-    { firstName, lastName, phone, email, source, branchId, educationSnapshot },
+    {
+      firstName,
+      lastName,
+      phone,
+      email,
+      source,
+      branchId,
+      fatherName,
+      motherName,
+      schoolName,
+      percentageReceived,
+      universityAttended,
+      intendedCountryId,
+      ieltsAttempted,
+      ieltsScore,
+      additionalNotes,
+    },
     session.id
   );
 

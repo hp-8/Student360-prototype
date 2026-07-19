@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { findDuplicateStudents } from "@/lib/domain/leads";
 import { PageHeader, Card, SectionTitle, Field, inputClass, Button } from "@/components/ui";
 import { convertAction, markLostAction } from "./actions";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function LeadDetailPage({
   params,
@@ -13,11 +14,14 @@ export default async function LeadDetailPage({
   await requireRole("FRONT_DESK", "MANAGER");
   const { id } = await params;
 
-  const lead = await prisma.lead.findUnique({ where: { id }, include: { branch: true } });
+  const lead = await prisma.lead.findUnique({
+    where: { id },
+    include: { branch: true, intendedCountry: true },
+  });
   if (!lead) notFound();
 
   const [counsellors, duplicates] = await Promise.all([
-    prisma.user.findMany({ where: { role: "COUNSELLOR", active: true } }),
+    prisma.user.findMany({ where: { roles: { has: "COUNSELLOR" }, active: true } }),
     findDuplicateStudents({
       firstName: lead.firstName,
       lastName: lead.lastName,
@@ -43,9 +47,37 @@ export default async function LeadDetailPage({
             <dt className="text-slate-500">Email</dt>
             <dd>{lead.email ?? "—"}</dd>
           </div>
+          <div>
+            <dt className="text-slate-500">Father&apos;s name</dt>
+            <dd>{lead.fatherName ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Mother&apos;s name</dt>
+            <dd>{lead.motherName ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">School</dt>
+            <dd>{lead.schoolName}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">% received</dt>
+            <dd>{lead.percentageReceived}%</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">University attended</dt>
+            <dd>{lead.universityAttended ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Country intended</dt>
+            <dd>{lead.intendedCountry?.name ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">IELTS</dt>
+            <dd>{lead.ieltsAttempted ? `Yes — ${lead.ieltsScore ?? "score not recorded"}` : "Not attempted"}</dd>
+          </div>
           <div className="col-span-2">
-            <dt className="text-slate-500">Education snapshot</dt>
-            <dd>{lead.educationSnapshot ?? "—"}</dd>
+            <dt className="text-slate-500">Additional notes</dt>
+            <dd>{lead.additionalNotes ?? "—"}</dd>
           </div>
         </dl>
       </Card>
@@ -58,8 +90,8 @@ export default async function LeadDetailPage({
           <ul className="text-sm text-amber-900 space-y-1">
             {duplicates.map((s) => (
               <li key={s.id}>
-                {s.firstName} {s.lastName} · {s.phone} · case manager:{" "}
-                {s.currentCaseManager?.name ?? "unassigned"}
+                {studentName(s)} · {s.phone} · case manager:{" "}
+                {s.currentCaseManager ? staffName(s.currentCaseManager) : "unassigned"}
               </li>
             ))}
           </ul>
@@ -75,7 +107,7 @@ export default async function LeadDetailPage({
               <option value="">Select counsellor</option>
               {counsellors.map((c) => (
                 <option key={c.id} value={c.id}>
-                  {c.name}
+                  {staffName(c)}
                 </option>
               ))}
             </select>

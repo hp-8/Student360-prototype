@@ -4,6 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, EmptyState, Field, inputClass, Button } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { assignWorkItemAction, updateWorkItemStatusAction, createWorkItemAction } from "./actions";
+import { getDirectReports } from "@/lib/domain/hierarchy";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function WorkItemsPage() {
   const session = await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
@@ -27,7 +29,9 @@ export default async function WorkItemsPage() {
       : [];
 
   const [allStaff, myStudents] = await Promise.all([
-    prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    session.role === "MANAGER"
+      ? getDirectReports(session.id)
+      : prisma.user.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
     session.role === "COUNSELLOR" || session.role === "MANAGER"
       ? prisma.student.findMany({ orderBy: { firstName: "asc" } })
       : Promise.resolve([]),
@@ -55,7 +59,7 @@ export default async function WorkItemsPage() {
                 <div>
                   <p className="text-sm font-medium">{item.title}</p>
                   <p className="text-xs text-slate-500">
-                    {item.student.firstName} {item.student.lastName} · {humanize(item.department)}
+                    {studentName(item.student)} · {humanize(item.department)}
                   </p>
                 </div>
                 <form action={assignWorkItemAction} className="flex items-center gap-2">
@@ -64,7 +68,7 @@ export default async function WorkItemsPage() {
                     <option value="">Assign to...</option>
                     {allStaff.map((s) => (
                       <option key={s.id} value={s.id}>
-                        {s.name}
+                        {staffName(s)}
                       </option>
                     ))}
                   </select>
@@ -99,7 +103,7 @@ export default async function WorkItemsPage() {
                   <td className="py-2">{item.title}</td>
                   <td className="py-2">
                     <Link href={`/students/${item.studentId}`} className="underline">
-                      {item.student.firstName} {item.student.lastName}
+                      {studentName(item.student)}
                     </Link>
                   </td>
                   <td className="py-2">{humanize(item.department)}</td>
@@ -115,14 +119,14 @@ export default async function WorkItemsPage() {
                           <option value="">Unassigned</option>
                           {allStaff.map((s) => (
                             <option key={s.id} value={s.id}>
-                              {s.name}
+                              {staffName(s)}
                             </option>
                           ))}
                         </select>
                         <button className="text-xs underline">Save</button>
                       </form>
                     ) : (
-                      item.assignedTo?.name ?? "Unassigned"
+                      item.assignedTo ? staffName(item.assignedTo) : "Unassigned"
                     )}
                   </td>
                   <td className="py-2">
@@ -164,7 +168,7 @@ export default async function WorkItemsPage() {
                 <option value="">Select student</option>
                 {myStudents.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.firstName} {s.lastName}
+                    {studentName(s)}
                   </option>
                 ))}
               </select>
@@ -195,7 +199,7 @@ export default async function WorkItemsPage() {
                 <option value="">Unassigned</option>
                 {allStaff.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name}
+                    {staffName(s)}
                   </option>
                 ))}
               </select>

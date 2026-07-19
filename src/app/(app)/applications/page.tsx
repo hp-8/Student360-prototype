@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
+import { studentName } from "@/lib/displayName";
 
 export default async function ApplicationsHomePage() {
   const session = await requireRole("APPLICATIONS_TEAM", "MANAGER");
@@ -42,7 +43,7 @@ export default async function ApplicationsHomePage() {
                 <tr key={so.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2">
                     <Link href={`/study-options/${so.id}`} className="underline text-slate-900">
-                      {so.student.firstName} {so.student.lastName}
+                      {studentName(so.student)}
                     </Link>
                   </td>
                   <td className="px-4 py-2">{so.universityName}</td>

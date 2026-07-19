@@ -5,7 +5,10 @@ import { NewEnquiryForm } from "./NewEnquiryForm";
 
 export default async function NewEnquiryPage() {
   await requireRole("FRONT_DESK", "MANAGER");
-  const branches = await prisma.branch.findMany({ orderBy: { name: "asc" } });
+  const [branches, countries] = await Promise.all([
+    prisma.branch.findMany({ orderBy: { name: "asc" } }),
+    prisma.country.findMany({ orderBy: { name: "asc" } }),
+  ]);
 
   return (
     <div>
@@ -13,7 +16,7 @@ export default async function NewEnquiryPage() {
         title="New enquiry"
         description="Duplicate checks run automatically on name, phone and email before a new record is created."
       />
-      <NewEnquiryForm branches={branches} />
+      <NewEnquiryForm branches={branches} countries={countries} />
     </div>
   );
 }

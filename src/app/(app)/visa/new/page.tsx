@@ -2,20 +2,24 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader } from "@/components/ui";
 import { NewVisaCaseForm } from "./NewVisaCaseForm";
+import { getDirectReports } from "@/lib/domain/hierarchy";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function NewVisaCasePage({
   searchParams,
 }: {
   searchParams: Promise<{ studentId?: string }>;
 }) {
-  await requireRole("VISA_TEAM", "MANAGER");
+  const session = await requireRole("VISA_TEAM", "MANAGER");
   const { studentId } = await searchParams;
 
   const [students, routes, offers, visaStaff] = await Promise.all([
     prisma.student.findMany({ orderBy: { firstName: "asc" } }),
     prisma.visaRoute.findMany({ include: { country: true }, orderBy: { name: "asc" } }),
     prisma.offer.findMany(),
-    prisma.user.findMany({ where: { role: "VISA_TEAM", active: true } }),
+    session.role === "MANAGER"
+      ? getDirectReports(session.id, "VISA_TEAM")
+      : prisma.user.findMany({ where: { roles: { has: "VISA_TEAM" }, active: true } }),
   ]);
 
   return (
@@ -25,7 +29,7 @@ export default async function NewVisaCasePage({
         description="Manual entry point for both internally-confirmed study options and visa-only students arriving with an external offer."
       />
       <NewVisaCaseForm
-        students={students.map((s) => ({ id: s.id, name: `${s.firstName} ${s.lastName}` }))}
+        students={students.map((s) => ({ id: s.id, name: studentName(s) }))}
         routes={routes.map((r) => ({
           id: r.id,
           countryId: r.countryId,
@@ -39,7 +43,7 @@ export default async function NewVisaCasePage({
           universityName: o.universityName,
           status: o.status,
         }))}
-        visaStaff={visaStaff.map((s) => ({ id: s.id, name: s.name }))}
+        visaStaff={visaStaff.map((s) => ({ id: s.id, name: staffName(s) }))}
         defaultStudentId={studentId}
       />
     </div>

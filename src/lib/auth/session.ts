@@ -17,14 +17,26 @@ export type SessionUser = {
   id: string;
   name: string;
   email: string;
+  /** The role currently being acted as. Every access check keys off this. */
   role: Role;
+  /** The full set of roles this user holds; used for the role switcher. */
+  roles: Role[];
 };
 
-export async function createSession(user: SessionUser) {
+export async function createSession(user: {
+  id: string;
+  name: string;
+  email: string;
+  roles: Role[];
+  activeRole?: Role;
+}) {
+  const activeRole = user.activeRole ?? user.roles[0];
+
   const token = await new SignJWT({
     name: user.name,
     email: user.email,
-    role: user.role,
+    role: activeRole,
+    roles: user.roles,
   })
     .setProtectedHeader({ alg: "HS256" })
     .setSubject(user.id)
@@ -59,6 +71,7 @@ export async function getSession(): Promise<SessionUser | null> {
       name: payload.name as string,
       email: payload.email as string,
       role: payload.role as Role,
+      roles: (payload.roles as Role[]) ?? [payload.role as Role],
     };
   } catch {
     return null;

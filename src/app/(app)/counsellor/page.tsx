@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function CounsellorHomePage() {
   const session = await requireRole("COUNSELLOR", "MANAGER");
@@ -48,11 +49,13 @@ export default async function CounsellorHomePage() {
                 <tr key={s.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2">
                     <Link href={`/students/${s.id}`} className="underline text-slate-900">
-                      {s.firstName} {s.lastName}
+                      {studentName(s)}
                     </Link>
                   </td>
                   <td className="px-4 py-2">{s.branch.name}</td>
-                  <td className="px-4 py-2">{s.currentCaseManager?.name ?? "Unassigned"}</td>
+                  <td className="px-4 py-2">
+                    {s.currentCaseManager ? staffName(s.currentCaseManager) : "Unassigned"}
+                  </td>
                   <td className="px-4 py-2">
                     <div className="flex flex-wrap gap-1">
                       {s.studyOptions.length === 0 ? (

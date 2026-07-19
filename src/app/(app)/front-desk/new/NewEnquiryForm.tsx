@@ -8,55 +8,121 @@ const initialState: NewEnquiryState = {};
 
 export function NewEnquiryForm({
   branches,
+  countries,
 }: {
   branches: { id: string; name: string }[];
+  countries: { id: string; name: string }[];
 }) {
   const [state, formAction, pending] = useActionState(
     newEnquiryAction,
     initialState
   );
   const [override, setOverride] = useState(false);
+  const [ieltsAttempted, setIeltsAttempted] = useState(
+    state.values?.ieltsAttempted === "true"
+  );
   const v = state.values;
 
   return (
     <form action={formAction} className="flex flex-col gap-4 max-w-xl">
       <input type="hidden" name="confirmed" value={override ? "true" : "false"} />
+      <input type="hidden" name="ieltsAttempted" value={ieltsAttempted ? "true" : "false"} />
+
+      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide -mb-2">
+        Student
+      </p>
       <div className="grid grid-cols-2 gap-4">
         <Field label="First name">
-          <input
-            name="firstName"
-            required
-            defaultValue={v?.firstName}
-            className={inputClass}
-          />
+          <input name="firstName" required defaultValue={v?.firstName} className={inputClass} />
         </Field>
         <Field label="Last name">
-          <input
-            name="lastName"
-            required
-            defaultValue={v?.lastName}
-            className={inputClass}
-          />
+          <input name="lastName" required defaultValue={v?.lastName} className={inputClass} />
         </Field>
       </div>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Phone">
-          <input
-            name="phone"
-            required
-            defaultValue={v?.phone}
-            className={inputClass}
-          />
+          <input name="phone" required defaultValue={v?.phone} className={inputClass} />
         </Field>
         <Field label="Email">
+          <input name="email" type="email" defaultValue={v?.email} className={inputClass} />
+        </Field>
+      </div>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="Father's name">
+          <input name="fatherName" defaultValue={v?.fatherName} className={inputClass} />
+        </Field>
+        <Field label="Mother's name">
+          <input name="motherName" defaultValue={v?.motherName} className={inputClass} />
+        </Field>
+      </div>
+
+      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide mt-2 -mb-2">
+        Academic background
+      </p>
+      <div className="grid grid-cols-2 gap-4">
+        <Field label="School name">
+          <input name="schoolName" required defaultValue={v?.schoolName} className={inputClass} />
+        </Field>
+        <Field label="% received">
           <input
-            name="email"
-            type="email"
-            defaultValue={v?.email}
+            name="percentageReceived"
+            type="number"
+            step="0.01"
+            min="0"
+            max="100"
+            required
+            defaultValue={v?.percentageReceived}
             className={inputClass}
           />
         </Field>
       </div>
+      <Field label="University attended (if any)">
+        <input
+          name="universityAttended"
+          defaultValue={v?.universityAttended}
+          className={inputClass}
+          placeholder="Optional — for students who already hold a degree"
+        />
+      </Field>
+      <div className="grid grid-cols-2 gap-4 items-end">
+        <Field label="Country intended">
+          <select
+            name="intendedCountryId"
+            defaultValue={v?.intendedCountryId ?? ""}
+            key={v?.intendedCountryId ?? "none"}
+            className={inputClass}
+          >
+            <option value="">Not decided yet</option>
+            {countries.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+        <div>
+          <label className="flex items-center gap-2 text-sm mb-1.5">
+            <input
+              type="checkbox"
+              checked={ieltsAttempted}
+              onChange={(e) => setIeltsAttempted(e.target.checked)}
+            />
+            IELTS given?
+          </label>
+          {ieltsAttempted && (
+            <input
+              name="ieltsScore"
+              placeholder="Score, e.g. 7.5"
+              defaultValue={v?.ieltsScore}
+              className={inputClass}
+            />
+          )}
+        </div>
+      </div>
+
+      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide mt-2 -mb-2">
+        Enquiry details
+      </p>
       <div className="grid grid-cols-2 gap-4">
         <Field label="Lead source">
           <input
@@ -83,18 +149,18 @@ export function NewEnquiryForm({
           </select>
         </Field>
       </div>
-      <Field label="Education snapshot">
+      <Field label="Additional notes (optional)">
         <textarea
-          name="educationSnapshot"
+          name="additionalNotes"
           rows={2}
-          defaultValue={v?.educationSnapshot}
+          defaultValue={v?.additionalNotes}
           className={inputClass}
-          placeholder="e.g. B.Tech Computer Science, 8.2 CGPA, 2025 graduate"
+          placeholder="Anything else worth capturing at first touchpoint"
         />
       </Field>
 
       {state.error && (
-        <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-md px-3 py-2">
+        <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
           {state.error}
         </p>
       )}

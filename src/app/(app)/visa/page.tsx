@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, Badge, EmptyState, Button } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
+import { studentName } from "@/lib/displayName";
 
 export default async function VisaHomePage() {
   const session = await requireRole("VISA_TEAM", "MANAGER");
@@ -47,7 +48,7 @@ export default async function VisaHomePage() {
                 <tr key={vc.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2">
                     <Link href={`/visa/${vc.id}`} className="underline text-slate-900">
-                      {vc.student.firstName} {vc.student.lastName}
+                      {studentName(vc.student)}
                     </Link>
                   </td>
                   <td className="px-4 py-2">{vc.country.name}</td>

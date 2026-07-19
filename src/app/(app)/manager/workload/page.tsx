@@ -2,6 +2,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, EmptyState } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function WorkloadPage() {
   await requireRole("MANAGER");
@@ -29,7 +30,7 @@ export default async function WorkloadPage() {
   for (const item of workItems) {
     if (!item.assignedTo) continue;
     const key = item.assignedTo.id;
-    if (!staffMap.has(key)) staffMap.set(key, { name: item.assignedTo.name, items: [] });
+    if (!staffMap.has(key)) staffMap.set(key, { name: staffName(item.assignedTo), items: [] });
     staffMap.get(key)!.items.push(item);
   }
   const unassignedItems = workItems.filter((w) => !w.assignedToId);
@@ -96,7 +97,7 @@ export default async function WorkloadPage() {
                   {row.items.map((item) => (
                     <li key={item.id} className="flex justify-between">
                       <span>
-                        {item.title} · {item.student.firstName} {item.student.lastName}
+                        {item.title} · {studentName(item.student)}
                       </span>
                       <Badge color={statusColor(item.status)}>{humanize(item.status)}</Badge>
                     </li>
@@ -115,7 +116,7 @@ export default async function WorkloadPage() {
             {unassignedItems.map((item) => (
               <li key={item.id} className="flex justify-between">
                 <span>
-                  {item.title} · {item.student.firstName} {item.student.lastName} ·{" "}
+                  {item.title} · {studentName(item.student)} ·{" "}
                   {humanize(item.department)}
                 </span>
                 <Badge color={statusColor(item.priority)}>{humanize(item.priority)}</Badge>

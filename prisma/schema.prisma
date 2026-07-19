@@ -51,6 +51,7 @@ enum SopStatus {
 enum OfferStatus {
   CONDITIONAL
   UNCONDITIONAL
+  ACCEPTED
   REJECTED
   WITHDRAWN
   DEFERRED
@@ -191,13 +192,16 @@ model User {
   name         String
   email        String   @unique
   passwordHash String
-  role         Role
+  roles        Role[]
   branchId     String?
+  managerId    String?
   active       Boolean  @default(true)
   createdAt    DateTime @default(now())
 
-  branch Branch? @relation(fields: [branchId], references: [id])
+  branch  Branch? @relation(fields: [branchId], references: [id])
+  manager User?   @relation("ManagerReports", fields: [managerId], references: [id])
 
+  directReports            User[]                @relation("ManagerReports")
   leadsCreated             Lead[]                @relation("LeadCreatedBy")
   studentsAsCaseManager    Student[]             @relation("CurrentCaseManager")
   caseAssignments          CaseAssignment[]      @relation("CaseAssignmentStaff")
@@ -226,6 +230,8 @@ model Country {
   visaRoutes           VisaRoute[]
   visaCases            VisaCase[]
   countryConfirmations CountryConfirmation[]
+  leadsIntending       Lead[]                @relation("LeadIntendedCountry")
+  studentsIntending    Student[]             @relation("StudentIntendedCountry")
 }
 
 model VisaRoute {
@@ -267,7 +273,15 @@ model Lead {
   source             String?
   branchId           String
   enquiryDate        DateTime   @default(now())
-  educationSnapshot  String?
+  fatherName         String?
+  motherName         String?
+  schoolName         String
+  percentageReceived Float
+  universityAttended String?
+  intendedCountryId  String?
+  ieltsAttempted     Boolean    @default(false)
+  ieltsScore         String?
+  additionalNotes    String?
   status             LeadStatus @default(OPEN)
   lostReason         String?
   createdById        String
@@ -276,6 +290,7 @@ model Lead {
   updatedAt          DateTime   @updatedAt
 
   branch           Branch   @relation(fields: [branchId], references: [id])
+  intendedCountry  Country? @relation("LeadIntendedCountry", fields: [intendedCountryId], references: [id])
   createdBy        User     @relation("LeadCreatedBy", fields: [createdById], references: [id])
   convertedStudent Student? @relation("LeadConvertedStudent", fields: [convertedStudentId], references: [id])
 }
@@ -294,14 +309,23 @@ model Student {
   leadSource           String?
   branchId             String
   enquiryDate          DateTime  @default(now())
-  educationSnapshot    String?
+  fatherName           String?
+  motherName           String?
+  schoolName           String?
+  percentageReceived   Float?
+  universityAttended   String?
+  intendedCountryId    String?
+  ieltsAttempted       Boolean   @default(false)
+  ieltsScore           String?
+  additionalNotes      String?
   consentNotes         String?
   currentCaseManagerId String?
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
 
-  branch             Branch @relation(fields: [branchId], references: [id])
-  currentCaseManager User?  @relation("CurrentCaseManager", fields: [currentCaseManagerId], references: [id])
+  branch             Branch   @relation(fields: [branchId], references: [id])
+  intendedCountry    Country? @relation("StudentIntendedCountry", fields: [intendedCountryId], references: [id])
+  currentCaseManager User?    @relation("CurrentCaseManager", fields: [currentCaseManagerId], references: [id])
 
   originatingLead      Lead?                 @relation("LeadConvertedStudent")
   caseAssignments      CaseAssignment[]

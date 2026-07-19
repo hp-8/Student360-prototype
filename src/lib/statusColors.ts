@@ -20,7 +20,8 @@ export const STATUS_COLOR: Record<string, string> = {
   FINAL: "green",
   // Offer
   CONDITIONAL: "amber",
-  UNCONDITIONAL: "green",
+  UNCONDITIONAL: "blue",
+  ACCEPTED: "green",
   DEFERRED: "purple",
   // Visa case lifecycle
   CLOSED: "slate",

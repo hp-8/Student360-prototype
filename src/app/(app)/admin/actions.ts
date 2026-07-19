@@ -10,12 +10,36 @@ export async function createUserAction(formData: FormData) {
   await requireRole("ADMINISTRATOR");
   const name = String(formData.get("name")).trim();
   const email = String(formData.get("email")).trim().toLowerCase();
-  const role = String(formData.get("role")) as Role;
+  const roles = formData.getAll("roles") as Role[];
   const branchId = String(formData.get("branchId") ?? "") || null;
+  const managerId = String(formData.get("managerId") ?? "") || null;
   const password = String(formData.get("password"));
 
+  if (roles.length === 0) {
+    throw new Error("At least one role must be selected.");
+  }
+
   const passwordHash = await hashPassword(password);
-  await prisma.user.create({ data: { name, email, role, branchId, passwordHash } });
+  await prisma.user.create({
+    data: { name, email, roles, branchId, managerId, passwordHash },
+  });
+  revalidatePath("/admin");
+}
+
+export async function updateUserRolesAndManagerAction(formData: FormData) {
+  await requireRole("ADMINISTRATOR");
+  const userId = String(formData.get("userId"));
+  const roles = formData.getAll("roles") as Role[];
+  const managerId = String(formData.get("managerId") ?? "") || null;
+
+  if (roles.length === 0) {
+    throw new Error("At least one role must be selected.");
+  }
+  if (managerId === userId) {
+    throw new Error("A user cannot be their own manager.");
+  }
+
+  await prisma.user.update({ where: { id: userId }, data: { roles, managerId } });
   revalidatePath("/admin");
 }
 

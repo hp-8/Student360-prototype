@@ -3,6 +3,7 @@ import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, Badge, EmptyState, Button } from "@/components/ui";
 import { statusColor } from "@/lib/statusColors";
+import { leadName } from "@/lib/displayName";
 
 export default async function FrontDeskPage() {
   await requireRole("FRONT_DESK", "MANAGER");
@@ -43,7 +44,7 @@ export default async function FrontDeskPage() {
               {leads.map((lead) => (
                 <tr key={lead.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2">
-                    {lead.firstName} {lead.lastName}
+                    {leadName(lead)}
                   </td>
                   <td className="px-4 py-2">{lead.phone}</td>
                   <td className="px-4 py-2">{lead.source ?? "—"}</td>

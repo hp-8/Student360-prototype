@@ -65,28 +65,37 @@ export async function seedDatabase() {
 
   console.log("Creating users...");
   const passwordHash = await bcrypt.hash(PASSWORD, 10);
+  type RoleName =
+    | "FRONT_DESK"
+    | "COUNSELLOR"
+    | "APPLICATIONS_TEAM"
+    | "VISA_TEAM"
+    | "MANAGER"
+    | "ADMINISTRATOR";
   const mkUser = (
     name: string,
     email: string,
-    role:
-      | "FRONT_DESK"
-      | "COUNSELLOR"
-      | "APPLICATIONS_TEAM"
-      | "VISA_TEAM"
-      | "MANAGER"
-      | "ADMINISTRATOR",
-    branchId?: string
-  ) => prisma.user.create({ data: { name, email, role, passwordHash, branchId } });
+    roles: RoleName[],
+    branchId?: string,
+    managerId?: string
+  ) => prisma.user.create({ data: { name, email, roles, passwordHash, branchId, managerId } });
 
-  const admin = await mkUser("Ayesha Admin", "admin@student360.test", "ADMINISTRATOR");
-  const manager = await mkUser("Manoj Manager", "manager@student360.test", "MANAGER", ahmedabad.id);
-  const frontDesk = await mkUser("Farah Sheikh", "frontdesk@student360.test", "FRONT_DESK", ahmedabad.id);
-  const counsellor = await mkUser("Chirag Bhatt", "counsellor@student360.test", "COUNSELLOR", ahmedabad.id);
-  const counsellor2 = await mkUser("Sneha Kulkarni", "counsellor2@student360.test", "COUNSELLOR", mumbai.id);
-  const appsTeam = await mkUser("Aditi Verma", "applications@student360.test", "APPLICATIONS_TEAM", ahmedabad.id);
-  const appsTeam2 = await mkUser("Rahul Joshi", "applications2@student360.test", "APPLICATIONS_TEAM", mumbai.id);
-  const visaTeam = await mkUser("Vivek Rana", "visateam@student360.test", "VISA_TEAM", ahmedabad.id);
-  const visaTeam2 = await mkUser("Neha Kapoor", "visateam2@student360.test", "VISA_TEAM", mumbai.id);
+  // Manager also holds Administrator rights, to demonstrate multi-role support
+  // and the role switcher in the header.
+  const manager = await mkUser(
+    "Manoj Manager",
+    "manager@student360.test",
+    ["MANAGER", "ADMINISTRATOR"],
+    ahmedabad.id
+  );
+  const admin = await mkUser("Ayesha Admin", "admin@student360.test", ["ADMINISTRATOR"]);
+  const frontDesk = await mkUser("Farah Sheikh", "frontdesk@student360.test", ["FRONT_DESK"], ahmedabad.id, manager.id);
+  const counsellor = await mkUser("Chirag Bhatt", "counsellor@student360.test", ["COUNSELLOR"], ahmedabad.id, manager.id);
+  const counsellor2 = await mkUser("Sneha Kulkarni", "counsellor2@student360.test", ["COUNSELLOR"], mumbai.id, manager.id);
+  const appsTeam = await mkUser("Aditi Verma", "applications@student360.test", ["APPLICATIONS_TEAM"], ahmedabad.id, manager.id);
+  const appsTeam2 = await mkUser("Rahul Joshi", "applications2@student360.test", ["APPLICATIONS_TEAM"], mumbai.id, manager.id);
+  const visaTeam = await mkUser("Vivek Rana", "visateam@student360.test", ["VISA_TEAM"], ahmedabad.id, manager.id);
+  const visaTeam2 = await mkUser("Neha Kapoor", "visateam2@student360.test", ["VISA_TEAM"], mumbai.id, manager.id);
 
   console.log("Creating countries, visa routes, requirement templates...");
   const germany = await prisma.country.create({ data: { name: "Germany", code: "DE" } });
@@ -195,7 +204,15 @@ export async function seedDatabase() {
       email: "ananya.shah@example.com",
       source: "Instagram ad",
       branchId: ahmedabad.id,
-      educationSnapshot: "B.Tech Computer Science, 8.2 CGPA, 2025 graduate",
+      fatherName: "Rakesh Shah",
+      motherName: "Priti Shah",
+      schoolName: "Delhi Public School, Ahmedabad",
+      percentageReceived: 82,
+      universityAttended: "Gujarat Technological University (B.Tech Computer Science)",
+      intendedCountryId: germany.id,
+      ieltsAttempted: true,
+      ieltsScore: "7.5",
+      additionalNotes: "8.2 CGPA, 2025 graduate",
       createdById: frontDesk.id,
     },
   });
@@ -207,7 +224,15 @@ export async function seedDatabase() {
       email: ananyaLead.email,
       branchId: ahmedabad.id,
       leadSource: ananyaLead.source,
-      educationSnapshot: ananyaLead.educationSnapshot,
+      fatherName: ananyaLead.fatherName,
+      motherName: ananyaLead.motherName,
+      schoolName: ananyaLead.schoolName,
+      percentageReceived: ananyaLead.percentageReceived,
+      universityAttended: ananyaLead.universityAttended,
+      intendedCountryId: ananyaLead.intendedCountryId,
+      ieltsAttempted: ananyaLead.ieltsAttempted,
+      ieltsScore: ananyaLead.ieltsScore,
+      additionalNotes: ananyaLead.additionalNotes,
       consentNotes: "Consented to data processing on enquiry form, signed 12 Jan 2026.",
       currentCaseManagerId: counsellor.id,
     },
@@ -257,6 +282,7 @@ export async function seedDatabase() {
     status: "CONDITIONAL",
   });
   await updateOfferStatus(ananyaGermanyOffer.id, "UNCONDITIONAL");
+  await updateOfferStatus(ananyaGermanyOffer.id, "ACCEPTED");
 
   const ananyaUkOffer = await recordOffer({
     studentId: ananya.id,
@@ -308,7 +334,15 @@ export async function seedDatabase() {
       email: "rohan.mehta@example.com",
       source: "Walk-in",
       branchId: mumbai.id,
-      educationSnapshot: "B.E. Mechanical Engineering, 7.6 CGPA, 2024 graduate",
+      fatherName: "Suresh Mehta",
+      motherName: "Kavita Mehta",
+      schoolName: "St. Xavier's High School, Mumbai",
+      percentageReceived: 76,
+      universityAttended: "Mumbai University (B.E. Mechanical Engineering)",
+      intendedCountryId: germany.id,
+      ieltsAttempted: true,
+      ieltsScore: "6.5",
+      additionalNotes: "7.6 CGPA, 2024 graduate",
       createdById: frontDesk.id,
     },
   });
@@ -320,7 +354,15 @@ export async function seedDatabase() {
       email: rohanLead.email,
       branchId: mumbai.id,
       leadSource: rohanLead.source,
-      educationSnapshot: rohanLead.educationSnapshot,
+      fatherName: rohanLead.fatherName,
+      motherName: rohanLead.motherName,
+      schoolName: rohanLead.schoolName,
+      percentageReceived: rohanLead.percentageReceived,
+      universityAttended: rohanLead.universityAttended,
+      intendedCountryId: rohanLead.intendedCountryId,
+      ieltsAttempted: rohanLead.ieltsAttempted,
+      ieltsScore: rohanLead.ieltsScore,
+      additionalNotes: rohanLead.additionalNotes,
       currentCaseManagerId: counsellor2.id,
     },
   });
@@ -357,7 +399,7 @@ export async function seedDatabase() {
     universityName: "TU Munich",
     courseName: "MSc Mechanical Engineering",
     intake: "Spring 2026",
-    status: "UNCONDITIONAL",
+    status: "ACCEPTED",
   });
 
   await confirmCountry(rohan.id, germany.id, counsellor2.id, "Prioritising Germany route; UK kept on hold.");
@@ -406,7 +448,15 @@ export async function seedDatabase() {
       email: "meera.iyer@example.com",
       source: "Referral",
       branchId: ahmedabad.id,
-      educationSnapshot: "B.Tech Information Technology, 8.9 CGPA, 2025 graduate",
+      fatherName: "Ganesh Iyer",
+      motherName: "Lakshmi Iyer",
+      schoolName: "Kendriya Vidyalaya, Ahmedabad",
+      percentageReceived: 89,
+      universityAttended: "Nirma University (B.Tech Information Technology)",
+      intendedCountryId: germany.id,
+      ieltsAttempted: true,
+      ieltsScore: "8.0",
+      additionalNotes: "8.9 CGPA, 2025 graduate",
       createdById: frontDesk.id,
     },
   });
@@ -418,7 +468,15 @@ export async function seedDatabase() {
       email: meeraLead.email,
       branchId: ahmedabad.id,
       leadSource: meeraLead.source,
-      educationSnapshot: meeraLead.educationSnapshot,
+      fatherName: meeraLead.fatherName,
+      motherName: meeraLead.motherName,
+      schoolName: meeraLead.schoolName,
+      percentageReceived: meeraLead.percentageReceived,
+      universityAttended: meeraLead.universityAttended,
+      intendedCountryId: meeraLead.intendedCountryId,
+      ieltsAttempted: meeraLead.ieltsAttempted,
+      ieltsScore: meeraLead.ieltsScore,
+      additionalNotes: meeraLead.additionalNotes,
       currentCaseManagerId: counsellor.id,
     },
   });
@@ -485,7 +543,14 @@ export async function seedDatabase() {
       email: "kabir.nair@example.com",
       source: "Walk-in - already holds an offer",
       branchId: mumbai.id,
-      educationSnapshot: "B.Com, already secured an offer independently.",
+      fatherName: "Vinod Nair",
+      motherName: "Radha Nair",
+      schoolName: "Bombay Scottish School",
+      percentageReceived: 68,
+      universityAttended: "University of Mumbai (B.Com)",
+      intendedCountryId: germany.id,
+      ieltsAttempted: false,
+      additionalNotes: "Already secured an offer independently.",
       createdById: frontDesk.id,
     },
   });
@@ -497,7 +562,15 @@ export async function seedDatabase() {
       email: kabirLead.email,
       branchId: mumbai.id,
       leadSource: kabirLead.source,
-      educationSnapshot: kabirLead.educationSnapshot,
+      fatherName: kabirLead.fatherName,
+      motherName: kabirLead.motherName,
+      schoolName: kabirLead.schoolName,
+      percentageReceived: kabirLead.percentageReceived,
+      universityAttended: kabirLead.universityAttended,
+      intendedCountryId: kabirLead.intendedCountryId,
+      ieltsAttempted: kabirLead.ieltsAttempted,
+      ieltsScore: kabirLead.ieltsScore,
+      additionalNotes: kabirLead.additionalNotes,
       currentCaseManagerId: counsellor2.id,
     },
   });
@@ -512,7 +585,7 @@ export async function seedDatabase() {
     universityName: "Universität Hamburg",
     courseName: "MSc International Business",
     intake: "Fall 2026",
-    status: "UNCONDITIONAL",
+    status: "ACCEPTED",
     isExternal: true,
     notes: "Offer obtained independently before approaching Student360; no internal study option/application on file.",
   });
@@ -541,7 +614,15 @@ export async function seedDatabase() {
       email: "priya.desai@example.com",
       source: "Education fair",
       branchId: ahmedabad.id,
-      educationSnapshot: "B.Sc Physics, 9.1 CGPA, 2025 graduate",
+      fatherName: "Nitin Desai",
+      motherName: "Alka Desai",
+      schoolName: "Anand Niketan School, Ahmedabad",
+      percentageReceived: 91,
+      universityAttended: "Gujarat University (B.Sc Physics)",
+      intendedCountryId: germany.id,
+      ieltsAttempted: true,
+      ieltsScore: "8.5",
+      additionalNotes: "9.1 CGPA, 2025 graduate",
       createdById: frontDesk.id,
     },
   });
@@ -553,7 +634,15 @@ export async function seedDatabase() {
       email: priyaLead.email,
       branchId: ahmedabad.id,
       leadSource: priyaLead.source,
-      educationSnapshot: priyaLead.educationSnapshot,
+      fatherName: priyaLead.fatherName,
+      motherName: priyaLead.motherName,
+      schoolName: priyaLead.schoolName,
+      percentageReceived: priyaLead.percentageReceived,
+      universityAttended: priyaLead.universityAttended,
+      intendedCountryId: priyaLead.intendedCountryId,
+      ieltsAttempted: priyaLead.ieltsAttempted,
+      ieltsScore: priyaLead.ieltsScore,
+      additionalNotes: priyaLead.additionalNotes,
       currentCaseManagerId: counsellor.id,
     },
   });
@@ -589,7 +678,7 @@ export async function seedDatabase() {
     universityName: "Karlsruhe Institute of Technology",
     courseName: "MSc Physics",
     intake: "Fall 2026",
-    status: "UNCONDITIONAL",
+    status: "ACCEPTED",
   });
   const priyaFranceApp = await createApplication({ studyOptionId: priyaFranceOption.id });
   const priyaFranceOffer = await recordOffer({
@@ -599,7 +688,7 @@ export async function seedDatabase() {
     universityName: "Sorbonne University",
     courseName: "MSc Physics",
     intake: "Fall 2026",
-    status: "UNCONDITIONAL",
+    status: "ACCEPTED",
   });
 
   await confirmCountry(priya.id, germany.id, counsellor.id, "Confirming Germany route.");
@@ -641,7 +730,11 @@ export async function seedDatabase() {
       email: "aarav.kapoor@example.com",
       source: "Google Ads",
       branchId: ahmedabad.id,
-      educationSnapshot: "B.A. Economics, final year",
+      schoolName: "Ryan International School, Ahmedabad",
+      percentageReceived: 74,
+      intendedCountryId: uk.id,
+      ieltsAttempted: false,
+      additionalNotes: "B.A. Economics, final year",
       createdById: frontDesk.id,
     },
   });
@@ -653,7 +746,11 @@ export async function seedDatabase() {
       email: "ananya.shah.alt@example.com",
       source: "Facebook ad",
       branchId: ahmedabad.id,
-      educationSnapshot: "Possible duplicate of existing converted student - same phone number.",
+      schoolName: "Delhi Public School, Ahmedabad",
+      percentageReceived: 82,
+      intendedCountryId: germany.id,
+      ieltsAttempted: false,
+      additionalNotes: "Possible duplicate of existing converted student - same phone number.",
       createdById: frontDesk.id,
     },
   });
@@ -665,7 +762,11 @@ export async function seedDatabase() {
       email: "vikram.singh@example.com",
       source: "Newspaper ad",
       branchId: mumbai.id,
-      educationSnapshot: "B.Tech Civil Engineering",
+      schoolName: "Don Bosco School, Mumbai",
+      percentageReceived: 71,
+      intendedCountryId: canada.id,
+      ieltsAttempted: false,
+      additionalNotes: "B.Tech Civil Engineering",
       status: "LOST",
       lostReason: "Decided to pursue an in-house job offer instead of studying abroad.",
       createdById: frontDesk.id,

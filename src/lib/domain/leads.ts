@@ -46,18 +46,25 @@ export async function findDuplicateLeads(params: {
   });
 }
 
-export async function createLead(
-  data: {
-    firstName: string;
-    lastName: string;
-    phone: string;
-    email?: string | null;
-    source?: string | null;
-    branchId: string;
-    educationSnapshot?: string | null;
-  },
-  createdById: string
-) {
+export type LeadIntakeFields = {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email?: string | null;
+  source?: string | null;
+  branchId: string;
+  fatherName?: string | null;
+  motherName?: string | null;
+  schoolName: string;
+  percentageReceived: number;
+  universityAttended?: string | null;
+  intendedCountryId?: string | null;
+  ieltsAttempted?: boolean;
+  ieltsScore?: string | null;
+  additionalNotes?: string | null;
+};
+
+export async function createLead(data: LeadIntakeFields, createdById: string) {
   return prisma.lead.create({
     data: { ...data, createdById },
   });
@@ -79,7 +86,6 @@ export async function convertLeadToStudent(
     guardianPhone?: string | null;
     guardianRelation?: string | null;
     consentNotes?: string | null;
-    educationSnapshot?: string | null;
   },
   caseManagerId: string,
   byUserId: string
@@ -96,7 +102,15 @@ export async function convertLeadToStudent(
         branchId: lead.branchId,
         enquiryDate: lead.enquiryDate,
         leadSource: lead.source,
-        educationSnapshot: extra.educationSnapshot ?? lead.educationSnapshot,
+        fatherName: lead.fatherName,
+        motherName: lead.motherName,
+        schoolName: lead.schoolName,
+        percentageReceived: lead.percentageReceived,
+        universityAttended: lead.universityAttended,
+        intendedCountryId: lead.intendedCountryId,
+        ieltsAttempted: lead.ieltsAttempted,
+        ieltsScore: lead.ieltsScore,
+        additionalNotes: lead.additionalNotes,
         dob: extra.dob,
         address: extra.address,
         guardianName: extra.guardianName,

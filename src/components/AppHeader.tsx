@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { SessionUser } from "@/lib/auth/session";
 import { ROLE_LABEL, NAV_BY_ROLE } from "@/lib/roles";
 import { logoutAction } from "@/app/logout/actions";
+import { RoleSwitcher } from "@/components/RoleSwitcher";
 
 export function AppHeader({ session }: { session: SessionUser }) {
   const navItems = NAV_BY_ROLE[session.role];
@@ -33,8 +34,13 @@ export function AppHeader({ session }: { session: SessionUser }) {
         <div className="flex items-center gap-3">
           <span className="text-sm text-[var(--ink-soft)] hidden sm:inline">
             {session.name}{" "}
-            <span className="text-[var(--brass)]">· {ROLE_LABEL[session.role]}</span>
+            {session.roles.length <= 1 ? (
+              <span className="text-[var(--brass)]">- {ROLE_LABEL[session.role]}</span>
+            ) : null}
           </span>
+          {session.roles.length > 1 && (
+            <RoleSwitcher roles={session.roles} activeRole={session.role} />
+          )}
           <form action={logoutAction}>
             <button
               type="submit"

@@ -30,12 +30,16 @@ export async function loginAction(
     return { error: "Invalid email or password." };
   }
 
+  if (user.roles.length === 0) {
+    return { error: "This account has no role assigned. Contact an administrator." };
+  }
+
   await createSession({
     id: user.id,
     name: user.name,
     email: user.email,
-    role: user.role,
+    roles: user.roles,
   });
 
-  redirect(ROLE_HOME[user.role]);
+  redirect(ROLE_HOME[user.roles[0]]);
 }

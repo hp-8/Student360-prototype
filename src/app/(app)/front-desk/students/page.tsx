@@ -1,6 +1,7 @@
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, EmptyState } from "@/components/ui";
+import { staffName, studentName } from "@/lib/displayName";
 
 export default async function FrontDeskStudentsPage() {
   await requireRole("FRONT_DESK", "MANAGER");
@@ -34,12 +35,12 @@ export default async function FrontDeskStudentsPage() {
               {students.map((s) => (
                 <tr key={s.id} className="border-b border-slate-100 last:border-0">
                   <td className="px-4 py-2">
-                    {s.firstName} {s.lastName}
+                    {studentName(s)}
                   </td>
                   <td className="px-4 py-2">{s.phone}</td>
                   <td className="px-4 py-2">{s.branch.name}</td>
                   <td className="px-4 py-2">
-                    {s.currentCaseManager?.name ?? "Unassigned"}
+                    {s.currentCaseManager ? staffName(s.currentCaseManager) : "Unassigned"}
                   </td>
                   <td className="px-4 py-2">
                     {s.enquiryDate.toLocaleDateString()}
