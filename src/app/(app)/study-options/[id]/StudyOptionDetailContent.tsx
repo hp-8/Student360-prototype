@@ -67,7 +67,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
           <SectionTitle>Status</SectionTitle>
           <Badge color={statusColor(studyOption.status)}>{humanize(studyOption.status)}</Badge>
         </div>
-        <p className="text-sm text-slate-500 mb-3">
+        <p className="text-sm text-[var(--ink-soft)] mb-3">
           Counsellor: {studyOption.assignedCounsellor ? staffName(studyOption.assignedCounsellor) : "—"} ·
           Applications team:{" "}
           {studyOption.assignedAppsUser ? staffName(studyOption.assignedAppsUser) : "—"}
@@ -99,9 +99,9 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
         ) : (
           <div className="flex flex-col gap-4 mb-4">
             {studyOption.applications.map((app) => (
-              <div key={app.id} className="border border-slate-200 rounded-md p-4">
+              <div key={app.id} className="border border-[var(--paper-line)] rounded-md p-4">
                 <div className="flex items-center justify-between mb-2">
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-[var(--ink)]">
                     Application · applied {app.appliedDate.toLocaleDateString()}
                   </p>
                   <Badge color={statusColor(app.status)}>{humanize(app.status)}</Badge>
@@ -126,7 +126,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                   </form>
                 )}
                 {app.offer ? (
-                  <div className="bg-slate-50 rounded-md p-3 text-sm">
+                  <div className="bg-[var(--paper)] rounded-md p-3 text-sm">
                     <div className="flex items-center justify-between mb-2">
                       <span>
                         Offer received {app.offer.receivedDate.toLocaleDateString()}
@@ -170,7 +170,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                 ) : (
                   canEditApplications && (
                     <details>
-                      <summary className="text-sm text-slate-600 cursor-pointer">
+                      <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
                         + Record offer for this application
                       </summary>
                       <form action={recordOfferAction} className="grid grid-cols-2 gap-3 mt-3">
@@ -208,7 +208,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
         )}
         {canEditApplications && (
           <details>
-            <summary className="text-sm text-slate-600 cursor-pointer">
+            <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
               + Log a new application
             </summary>
             <form action={createApplicationAction} className="flex items-end gap-3 mt-3">
@@ -232,9 +232,9 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
         ) : (
           <div className="flex flex-col gap-3 mb-4">
             {studyOption.sopRecords.map((sop) => (
-              <div key={sop.id} className="border border-slate-200 rounded-md p-3">
+              <div key={sop.id} className="border border-[var(--paper-line)] rounded-md p-3">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm text-slate-600">
+                  <span className="text-sm text-[var(--ink-soft)]">
                     Created {sop.createdAt.toLocaleDateString()}
                   </span>
                   <Badge color={statusColor(sop.status)}>{humanize(sop.status)}</Badge>

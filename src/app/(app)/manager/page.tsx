@@ -70,16 +70,16 @@ export default async function ManagerDashboardPage() {
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-5">
-          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Total students</p>
-          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{students.length}</p>
+          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Total students</p>
+          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{students.length}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Open visa cases</p>
-          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{visaCaseCount}</p>
+          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Open visa cases</p>
+          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{visaCaseCount}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Pending work items</p>
-          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{pendingWorkItems}</p>
+          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Pending work items</p>
+          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{pendingWorkItems}</p>
         </Card>
       </div>
 
@@ -92,7 +92,7 @@ export default async function ManagerDashboardPage() {
               className="border border-[var(--paper-line)] rounded-md px-3 py-2.5 flex flex-col gap-1"
             >
               <Badge color={stageColor(stage)}>{stage}</Badge>
-              <span className="font-display text-2xl font-semibold text-[var(--navy-deep)]">
+              <span className="font-mono text-2xl font-semibold text-[var(--navy-deep)]">
                 {stageCounts.get(stage) ?? 0}
               </span>
             </div>

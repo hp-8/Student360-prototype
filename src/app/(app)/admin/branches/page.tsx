@@ -20,7 +20,7 @@ export default async function AdminBranchesPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="py-2 font-medium">Name</th>
                 <th className="py-2 font-medium">City</th>
                 <th className="py-2 font-medium">Users</th>
@@ -29,7 +29,7 @@ export default async function AdminBranchesPage() {
             </thead>
             <tbody>
               {branches.map((b) => (
-                <tr key={b.id} className="border-b border-slate-100 last:border-0">
+                <tr key={b.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="py-2">{b.name}</td>
                   <td className="py-2">{b.city}</td>
                   <td className="py-2">{b._count.users}</td>

@@ -30,7 +30,7 @@ export default async function ApplicationsHomePage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2 font-medium">Student</th>
                 <th className="px-4 py-2 font-medium">University</th>
                 <th className="px-4 py-2 font-medium">Country</th>
@@ -40,9 +40,9 @@ export default async function ApplicationsHomePage() {
             </thead>
             <tbody>
               {studyOptions.map((so) => (
-                <tr key={so.id} className="border-b border-slate-100 last:border-0">
+                <tr key={so.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="px-4 py-2">
-                    <Link href={`/study-options/${so.id}`} className="underline text-slate-900">
+                    <Link href={`/study-options/${so.id}`} className="underline text-[var(--ink)]">
                       {studentName(so.student)}
                     </Link>
                   </td>

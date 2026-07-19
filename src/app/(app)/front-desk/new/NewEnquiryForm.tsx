@@ -28,7 +28,7 @@ export function NewEnquiryForm({
       <input type="hidden" name="confirmed" value={override ? "true" : "false"} />
       <input type="hidden" name="ieltsAttempted" value={ieltsAttempted ? "true" : "false"} />
 
-      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide -mb-2">
+      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide -mb-2">
         Student
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -56,7 +56,7 @@ export function NewEnquiryForm({
         </Field>
       </div>
 
-      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide mt-2 -mb-2">
+      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide mt-2 -mb-2">
         Academic background
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -120,7 +120,7 @@ export function NewEnquiryForm({
         </div>
       </div>
 
-      <p className="text-xs font-semibold text-[var(--brass)] uppercase tracking-wide mt-2 -mb-2">
+      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide mt-2 -mb-2">
         Enquiry details
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -160,7 +160,7 @@ export function NewEnquiryForm({
       </Field>
 
       {state.error && (
-        <p className="text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+        <p className="text-sm text-[var(--status-red-fg)] bg-[var(--status-red-bg)] border border-rose-200 rounded-md px-3 py-2">
           {state.error}
         </p>
       )}
@@ -169,11 +169,11 @@ export function NewEnquiryForm({
         (state.duplicates.students.length > 0 ||
           state.duplicates.leads.length > 0) &&
         !override && (
-          <Card className="p-4 border-amber-300 bg-amber-50">
-            <p className="text-sm font-medium text-amber-800 mb-2">
+          <Card className="p-4 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">
+            <p className="text-sm font-medium text-[var(--status-amber-fg)] mb-2">
               Possible duplicates found. Review before creating a new record.
             </p>
-            <ul className="text-sm text-amber-900 space-y-1">
+            <ul className="text-sm text-[var(--status-amber-fg)] space-y-1">
               {state.duplicates.students.map((s) => (
                 <li key={s.id}>
                   Existing student: {s.name} · {s.phone} · {s.email ?? "—"}
@@ -188,7 +188,7 @@ export function NewEnquiryForm({
             <button
               type="button"
               onClick={() => setOverride(true)}
-              className="mt-3 text-sm underline text-amber-900"
+              className="mt-3 text-sm underline text-[var(--status-amber-fg)]"
             >
               These are different people — create the enquiry anyway
             </button>

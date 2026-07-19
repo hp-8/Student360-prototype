@@ -64,7 +64,7 @@ export default async function AdminUsersPage() {
         <SectionTitle>All users</SectionTitle>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
+            <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
               <th className="py-2 font-medium">Name</th>
               <th className="py-2 font-medium">Email</th>
               <th className="py-2 font-medium">Roles</th>
@@ -76,7 +76,7 @@ export default async function AdminUsersPage() {
           </thead>
           <tbody>
             {users.map((u) => (
-              <tr key={u.id} className="border-b border-slate-100 last:border-0 align-top">
+              <tr key={u.id} className="border-b border-[var(--paper-line)] last:border-0 align-top">
                 <td className="py-2">{u.name}</td>
                 <td className="py-2">{u.email}</td>
                 <td className="py-2">
@@ -105,7 +105,7 @@ export default async function AdminUsersPage() {
                       </button>
                     </form>
                     <details>
-                      <summary className="text-sm text-slate-600 cursor-pointer">Edit</summary>
+                      <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">Edit</summary>
                       <form
                         action={updateUserRolesAndManagerAction}
                         className="flex flex-col gap-2 mt-2 text-left w-64"

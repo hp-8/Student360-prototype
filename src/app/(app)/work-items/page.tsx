@@ -51,20 +51,20 @@ export default async function WorkItemsPage() {
       />
 
       {unassignedForMyStudents.length > 0 && (
-        <Card className="p-5 border-amber-300 bg-amber-50">
+        <Card className="p-5 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">
           <SectionTitle>Unassigned items for my students</SectionTitle>
           <div className="flex flex-col gap-2">
             {unassignedForMyStudents.map((item) => (
-              <div key={item.id} className="flex items-center justify-between bg-white border border-amber-200 rounded-md px-4 py-2">
+              <div key={item.id} className="flex items-center justify-between bg-[var(--card)] border border-[var(--status-amber-fg)]/25 rounded-md px-4 py-2">
                 <div>
                   <p className="text-sm font-medium">{item.title}</p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--ink-soft)]">
                     {studentName(item.student)} · {humanize(item.department)}
                   </p>
                 </div>
                 <form action={assignWorkItemAction} className="flex items-center gap-2">
                   <input type="hidden" name="workItemId" value={item.id} />
-                  <select name="assignedToId" required className="text-sm rounded border border-slate-300 px-2 py-1">
+                  <select name="assignedToId" required className="text-sm rounded border border-[var(--paper-line)] px-2 py-1">
                     <option value="">Assign to...</option>
                     {allStaff.map((s) => (
                       <option key={s.id} value={s.id}>
@@ -72,7 +72,7 @@ export default async function WorkItemsPage() {
                       </option>
                     ))}
                   </select>
-                  <button className="text-sm text-slate-900 underline">Assign</button>
+                  <button className="text-sm text-[var(--ink)] underline">Assign</button>
                 </form>
               </div>
             ))}
@@ -87,7 +87,7 @@ export default async function WorkItemsPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="py-2 font-medium">Title</th>
                 <th className="py-2 font-medium">Student</th>
                 <th className="py-2 font-medium">Dept</th>
@@ -99,7 +99,7 @@ export default async function WorkItemsPage() {
             </thead>
             <tbody>
               {myItems.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                <tr key={item.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="py-2">{item.title}</td>
                   <td className="py-2">
                     <Link href={`/students/${item.studentId}`} className="underline">
@@ -114,7 +114,7 @@ export default async function WorkItemsPage() {
                         <select
                           name="assignedToId"
                           defaultValue={item.assignedToId ?? ""}
-                          className="text-xs rounded border border-slate-300 px-1 py-0.5"
+                          className="text-xs rounded border border-[var(--paper-line)] px-1 py-0.5"
                         >
                           <option value="">Unassigned</option>
                           {allStaff.map((s) => (
@@ -141,7 +141,7 @@ export default async function WorkItemsPage() {
                       <select
                         name="status"
                         defaultValue={item.status}
-                        className="text-xs rounded border border-slate-300 px-1 py-0.5"
+                        className="text-xs rounded border border-[var(--paper-line)] px-1 py-0.5"
                       >
                         {["NOT_STARTED", "IN_PROGRESS", "BLOCKED", "DONE"].map((s) => (
                           <option key={s} value={s}>

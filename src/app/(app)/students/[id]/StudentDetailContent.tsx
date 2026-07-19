@@ -141,10 +141,10 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <Button type="submit">Reassign</Button>
           </form>
           <div className="mt-4">
-            <p className="text-xs font-medium text-slate-500 mb-2">History</p>
+            <p className="text-xs font-medium text-[var(--ink-soft)] mb-2">History</p>
             <ul className="text-sm space-y-1">
               {student.caseAssignments.map((ca) => (
-                <li key={ca.id} className="text-slate-600">
+                <li key={ca.id} className="text-[var(--ink-soft)]">
                   {staffName(ca.staff)} from {ca.startedAt.toLocaleDateString()}
                   {ca.endedAt ? ` to ${ca.endedAt.toLocaleDateString()}` : " (active)"} ·
                   assigned by {staffName(ca.assignedBy)}
@@ -198,7 +198,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
         <SectionTitle>Learning services &amp; test attempts</SectionTitle>
         <div className="grid grid-cols-2 gap-6">
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-2">Enrollments</p>
+            <p className="text-xs font-medium text-[var(--ink-soft)] mb-2">Enrollments</p>
             {student.learningEnrollments.length === 0 ? (
               <EmptyState>None on file.</EmptyState>
             ) : (
@@ -213,7 +213,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
             )}
           </div>
           <div>
-            <p className="text-xs font-medium text-slate-500 mb-2">Test attempts</p>
+            <p className="text-xs font-medium text-[var(--ink-soft)] mb-2">Test attempts</p>
             {student.testAttempts.length === 0 ? (
               <EmptyState>None on file.</EmptyState>
             ) : (
@@ -242,13 +242,13 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <Link
               key={so.id}
               href={`/study-options/${so.id}`}
-              className="flex items-center justify-between border border-slate-200 rounded-md px-4 py-3 hover:bg-slate-50"
+              className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-4 py-3 hover:bg-[var(--paper)]"
             >
               <div>
-                <p className="text-sm font-medium text-slate-900">
+                <p className="text-sm font-medium text-[var(--ink)]">
                   {so.universityName} · {so.courseName}
                 </p>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-[var(--ink-soft)]">
                   {so.country.name} · {so.intake}
                   {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
                 </p>
@@ -265,7 +265,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
       )}
       {canEditStudyOptions && (
         <details className="mt-2">
-          <summary className="text-sm text-slate-600 cursor-pointer">
+          <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
             + Add a new study option
           </summary>
           <form action={createStudyOptionAction} className="grid grid-cols-2 gap-3 mt-3">
@@ -307,7 +307,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
           (session.role === "VISA_TEAM" || session.role === "MANAGER") && (
             <Link
               href={`/visa/new?studentId=${student.id}`}
-              className="text-sm text-slate-900 underline"
+              className="text-sm text-[var(--ink)] underline"
             >
               Open visa case
             </Link>
@@ -326,13 +326,13 @@ export async function StudentDetailContent({ id }: { id: string }) {
               <Link
                 key={vc.id}
                 href={`/visa/${vc.id}`}
-                className="flex items-center justify-between border border-slate-200 rounded-md px-4 py-3 hover:bg-slate-50"
+                className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-4 py-3 hover:bg-[var(--paper)]"
               >
                 <div>
-                  <p className="text-sm font-medium text-slate-900">
+                  <p className="text-sm font-medium text-[var(--ink)]">
                     {vc.country.name} · {vc.visaRoute.name}
                   </p>
-                  <p className="text-xs text-slate-500">
+                  <p className="text-xs text-[var(--ink-soft)]">
                     {vc.activeOffer
                       ? `Active offer: ${vc.activeOffer.universityName}`
                       : "No active offer set"}{" "}
@@ -365,7 +365,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
       ) : (
         <table className="w-full text-sm mb-4">
           <thead>
-            <tr className="border-b border-slate-200 text-left text-slate-500">
+            <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
               <th className="py-2 font-medium">Label</th>
               <th className="py-2 font-medium">Type</th>
               <th className="py-2 font-medium">Expiry</th>
@@ -375,7 +375,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
           </thead>
           <tbody>
             {student.documents.map((d) => (
-              <tr key={d.id} className="border-b border-slate-100 last:border-0">
+              <tr key={d.id} className="border-b border-[var(--paper-line)] last:border-0">
                 <td className="py-2">{d.label}</td>
                 <td className="py-2">{humanize(d.type)}</td>
                 <td className="py-2">
@@ -393,7 +393,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
                     <form action={verifyDocumentAction}>
                       <input type="hidden" name="studentId" value={student.id} />
                       <input type="hidden" name="documentId" value={d.id} />
-                      <button className="text-slate-900 underline text-sm">
+                      <button className="text-[var(--ink)] underline text-sm">
                         Mark verified
                       </button>
                     </form>
@@ -405,7 +405,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
         </table>
       )}
       <details>
-        <summary className="text-sm text-slate-600 cursor-pointer">+ Add a document</summary>
+        <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">+ Add a document</summary>
         <form action={addDocumentAction} className="grid grid-cols-2 gap-3 mt-3">
           <input type="hidden" name="studentId" value={student.id} />
           <Field label="Label">
@@ -505,8 +505,8 @@ export async function StudentDetailContent({ id }: { id: string }) {
       <Card className="p-5">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-xl font-semibold text-slate-900">{studentName(student)}</h1>
-            <p className="text-sm text-slate-500 mt-1">
+            <h1 className="text-xl font-semibold text-[var(--ink)]">{studentName(student)}</h1>
+            <p className="text-sm text-[var(--ink-soft)] mt-1">
               {student.branch.name} · Enquiry {student.enquiryDate.toLocaleDateString()}
             </p>
           </div>
@@ -517,15 +517,15 @@ export async function StudentDetailContent({ id }: { id: string }) {
         </div>
         <dl className="grid grid-cols-3 gap-4 mt-4 text-sm">
           <div>
-            <dt className="text-slate-500">Phone</dt>
+            <dt className="text-[var(--ink-soft)]">Phone</dt>
             <dd>{student.phone}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Email</dt>
+            <dt className="text-[var(--ink-soft)]">Email</dt>
             <dd>{student.email ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Guardian</dt>
+            <dt className="text-[var(--ink-soft)]">Guardian</dt>
             <dd>
               {student.guardianName
                 ? `${student.guardianName} (${student.guardianRelation ?? "—"}) · ${student.guardianPhone ?? "—"}`
@@ -533,26 +533,26 @@ export async function StudentDetailContent({ id }: { id: string }) {
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">Parents</dt>
+            <dt className="text-[var(--ink-soft)]">Parents</dt>
             <dd>{[student.fatherName, student.motherName].filter(Boolean).join(" · ") || "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">School / % received</dt>
+            <dt className="text-[var(--ink-soft)]">School / % received</dt>
             <dd>
               {student.schoolName ?? "—"}
               {student.percentageReceived != null ? ` · ${student.percentageReceived}%` : ""}
             </dd>
           </div>
           <div>
-            <dt className="text-slate-500">University attended</dt>
+            <dt className="text-[var(--ink-soft)]">University attended</dt>
             <dd>{student.universityAttended ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Country intended</dt>
+            <dt className="text-[var(--ink-soft)]">Country intended</dt>
             <dd>{student.intendedCountry?.name ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">IELTS</dt>
+            <dt className="text-[var(--ink-soft)]">IELTS</dt>
             <dd>
               {student.ieltsAttempted
                 ? `Yes — ${student.ieltsScore ?? "score not recorded"}`
@@ -560,7 +560,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
             </dd>
           </div>
           <div className="col-span-3">
-            <dt className="text-slate-500">Additional notes</dt>
+            <dt className="text-[var(--ink-soft)]">Additional notes</dt>
             <dd>{student.additionalNotes ?? "—"}</dd>
           </div>
         </dl>

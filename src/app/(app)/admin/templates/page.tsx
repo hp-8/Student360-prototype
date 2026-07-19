@@ -32,14 +32,14 @@ export default async function AdminTemplatesPage() {
             </div>
             <div className="flex flex-col gap-3 mb-4">
               {route.requirementTemplates.map((t) => (
-                <div key={t.id} className="border border-slate-200 rounded-md p-3">
+                <div key={t.id} className="border border-[var(--paper-line)] rounded-md p-3">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Version {t.version}</span>
                     <Badge color={t.isActive ? "green" : "slate"}>
                       {t.isActive ? "Active" : "Superseded"}
                     </Badge>
                   </div>
-                  <ul className="text-sm text-slate-600 list-disc list-inside">
+                  <ul className="text-sm text-[var(--ink-soft)] list-disc list-inside">
                     {(t.items as unknown as TemplateItem[]).map((item, i) => (
                       <li key={i}>{item.title}</li>
                     ))}
@@ -51,7 +51,7 @@ export default async function AdminTemplatesPage() {
               )}
             </div>
             <details>
-              <summary className="text-sm text-slate-600 cursor-pointer">
+              <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
                 + Publish a new version
               </summary>
               <form action={createRequirementTemplateAction} className="flex flex-col gap-3 mt-3">

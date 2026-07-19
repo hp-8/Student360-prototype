@@ -18,7 +18,7 @@ export default async function LoginPage() {
   return (
     <div className="flex flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-4xl grid md:grid-cols-2 gap-8 items-stretch">
-        <div className="bg-white rounded-xl border border-[var(--paper-line)] shadow-[0_1px_3px_rgba(28,35,51,0.06)] p-9">
+        <div className="bg-[var(--card)] rounded-xl border border-[var(--paper-line)] shadow-[0_1px_3px_rgba(28,35,51,0.06)] p-9">
           <div className="flex items-center gap-2.5 mb-1">
             <span className="flex items-center justify-center w-8 h-8 rounded-[8px] bg-[var(--navy)] text-white font-display text-base font-semibold">
               S

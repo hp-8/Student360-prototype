@@ -89,7 +89,7 @@ export function NewVisaCaseForm({
       </Field>
 
       <div>
-        <span className="block text-xs font-medium text-slate-600 mb-1">
+        <span className="block text-xs font-medium text-[var(--ink-soft)] mb-1">
           Active offer for this case
         </span>
         <div className="flex gap-4 text-sm mb-2">

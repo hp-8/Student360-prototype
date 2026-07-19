@@ -8,11 +8,14 @@ export function AppHeader({ session }: { session: SessionUser }) {
   const navItems = NAV_BY_ROLE[session.role];
 
   return (
-    <header className="border-b border-[var(--paper-line)] bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+    <header
+      className="border-b border-[var(--paper-line)] bg-[var(--paper-2)]/90 backdrop-blur-sm sticky top-0 z-10"
+      style={{ boxShadow: "0 1px 0 var(--brass-soft)" }}
+    >
       <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
         <div className="flex items-center gap-7">
           <Link href="/" className="flex items-center gap-2.5 shrink-0">
-            <span className="flex items-center justify-center w-7 h-7 rounded-[7px] bg-[var(--navy)] text-white font-display text-sm font-semibold">
+            <span className="flex items-center justify-center w-7 h-7 rounded-[3px] bg-[var(--navy)] text-white font-display text-sm font-semibold">
               S
             </span>
             <span className="font-display font-semibold text-[var(--navy-deep)] tracking-tight">
@@ -35,7 +38,9 @@ export function AppHeader({ session }: { session: SessionUser }) {
           <span className="text-sm text-[var(--ink-soft)] hidden sm:inline">
             {session.name}{" "}
             {session.roles.length <= 1 ? (
-              <span className="text-[var(--brass)]">- {ROLE_LABEL[session.role]}</span>
+              <span className="font-mono text-[0.7rem] uppercase tracking-wide text-[var(--brass-ink)]">
+                - {ROLE_LABEL[session.role]}
+              </span>
             ) : null}
           </span>
           {session.roles.length > 1 && (

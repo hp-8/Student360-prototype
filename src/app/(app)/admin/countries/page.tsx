@@ -21,12 +21,12 @@ export default async function AdminCountriesPage() {
         ) : (
           <div className="flex flex-col gap-4">
             {countries.map((c) => (
-              <div key={c.id} className="border border-slate-200 rounded-md p-4">
-                <p className="text-sm font-medium text-slate-900 mb-2">
+              <div key={c.id} className="border border-[var(--paper-line)] rounded-md p-4">
+                <p className="text-sm font-medium text-[var(--ink)] mb-2">
                   {c.name} ({c.code})
                 </p>
                 {c.visaRoutes.length === 0 ? (
-                  <p className="text-sm text-slate-400 italic">No visa routes configured.</p>
+                  <p className="text-sm text-[var(--ink-faint)] italic">No visa routes configured.</p>
                 ) : (
                   <ul className="text-sm space-y-1">
                     {c.visaRoutes.map((r) => (

@@ -115,7 +115,7 @@ export default async function WorkloadPage() {
       />
 
       {unassignedItems.length > 0 && (
-        <Card className="p-4 border-amber-300 bg-amber-50">
+        <Card className="p-4 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">
           <div className="flex items-center justify-between mb-2">
             <SectionTitle>Needs an owner</SectionTitle>
             <Badge color="amber">{unassignedItems.length}</Badge>

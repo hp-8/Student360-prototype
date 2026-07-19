@@ -51,7 +51,7 @@ export function SectionTitle({
 }) {
   return (
     <div className="flex items-center justify-between mb-3.5">
-      <h2 className="text-xs font-semibold text-[var(--brass)] uppercase tracking-[0.08em]">
+      <h2 className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-[0.08em]">
         {children}
       </h2>
       {action}
@@ -64,12 +64,12 @@ export function EmptyState({ children }: { children: ReactNode }) {
 }
 
 const BADGE_COLORS: Record<string, string> = {
-  slate: "bg-slate-100 text-slate-600",
-  green: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/15",
-  red: "bg-rose-50 text-rose-700 ring-1 ring-rose-600/15",
-  amber: "bg-amber-50 text-amber-800 ring-1 ring-amber-600/15",
-  blue: "bg-sky-50 text-sky-700 ring-1 ring-sky-600/15",
-  purple: "bg-violet-50 text-violet-700 ring-1 ring-violet-600/15",
+  slate: "bg-[var(--status-slate-bg)] text-[var(--status-slate-fg)] border-[var(--status-slate-fg)]/20",
+  green: "bg-[var(--status-green-bg)] text-[var(--status-green-fg)] border-[var(--status-green-fg)]/25",
+  red: "bg-[var(--status-red-bg)] text-[var(--status-red-fg)] border-[var(--status-red-fg)]/25",
+  amber: "bg-[var(--status-amber-bg)] text-[var(--status-amber-fg)] border-[var(--status-amber-fg)]/25",
+  blue: "bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)] border-[var(--status-blue-fg)]/25",
+  purple: "bg-[var(--status-purple-bg)] text-[var(--status-purple-fg)] border-[var(--status-purple-fg)]/25",
 };
 
 export type BadgeColor = keyof typeof BADGE_COLORS;
@@ -83,7 +83,7 @@ export function Badge({
 }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${BADGE_COLORS[color]}`}
+      className={`inline-flex items-center rounded-[3px] border px-2 py-0.5 font-mono text-[0.6875rem] font-semibold uppercase tracking-wide ${BADGE_COLORS[color]}`}
     >
       {children}
     </span>
@@ -102,16 +102,15 @@ export function Button({
   className?: string;
 }) {
   const styles = {
-    primary:
-      "bg-[var(--navy)] text-white hover:bg-[var(--navy-deep)] shadow-sm",
+    primary: "bg-[var(--navy)] text-white hover:bg-[var(--navy-deep)] shadow-sm",
     secondary:
-      "bg-white text-[var(--ink)] border border-[var(--paper-line)] hover:border-[var(--brass-soft)] hover:text-[var(--brass)]",
-    danger: "bg-rose-700 text-white hover:bg-rose-800 shadow-sm",
+      "bg-[var(--card)] text-[var(--ink)] border border-[var(--paper-line)] hover:border-[var(--brass-soft)] hover:text-[var(--brass-ink)]",
+    danger: "bg-[var(--oxblood)] text-white hover:brightness-110 shadow-sm",
   };
   return (
     <button
       type={type}
-      className={`rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors ${styles[variant]} ${className}`}
+      className={`rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors duration-[160ms] ${styles[variant]} ${className}`}
     >
       {children}
     </button>
@@ -136,4 +135,4 @@ export function Field({
 }
 
 export const inputClass =
-  "w-full rounded-md border border-[var(--paper-line)] bg-white px-3 py-1.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--navy)]/30 focus:border-[var(--navy)]/50";
+  "w-full rounded-md border border-[var(--paper-line)] bg-[var(--card)] px-3 py-1.5 text-sm text-[var(--ink)] focus:outline-none focus:ring-2 focus:ring-[var(--focus-ring)]/40 focus:border-[var(--brass)]/60";

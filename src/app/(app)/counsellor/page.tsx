@@ -37,7 +37,7 @@ export default async function CounsellorHomePage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Branch</th>
                 <th className="px-4 py-2 font-medium">Case manager</th>
@@ -46,9 +46,9 @@ export default async function CounsellorHomePage() {
             </thead>
             <tbody>
               {students.map((s) => (
-                <tr key={s.id} className="border-b border-slate-100 last:border-0">
+                <tr key={s.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="px-4 py-2">
-                    <Link href={`/students/${s.id}`} className="underline text-slate-900">
+                    <Link href={`/students/${s.id}`} className="underline text-[var(--ink)]">
                       {studentName(s)}
                     </Link>
                   </td>
@@ -59,7 +59,7 @@ export default async function CounsellorHomePage() {
                   <td className="px-4 py-2">
                     <div className="flex flex-wrap gap-1">
                       {s.studyOptions.length === 0 ? (
-                        <span className="text-slate-400">None</span>
+                        <span className="text-[var(--ink-faint)]">None</span>
                       ) : (
                         s.studyOptions.map((so) => (
                           <Badge key={so.id} color="blue">

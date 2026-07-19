@@ -23,7 +23,7 @@ export default async function FrontDeskStudentsPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Phone</th>
                 <th className="px-4 py-2 font-medium">Branch</th>
@@ -33,7 +33,7 @@ export default async function FrontDeskStudentsPage() {
             </thead>
             <tbody>
               {students.map((s) => (
-                <tr key={s.id} className="border-b border-slate-100 last:border-0">
+                <tr key={s.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="px-4 py-2">
                     {studentName(s)}
                   </td>

@@ -31,7 +31,7 @@ export default async function FrontDeskPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2 font-medium">Name</th>
                 <th className="px-4 py-2 font-medium">Phone</th>
                 <th className="px-4 py-2 font-medium">Source</th>
@@ -42,7 +42,7 @@ export default async function FrontDeskPage() {
             </thead>
             <tbody>
               {leads.map((lead) => (
-                <tr key={lead.id} className="border-b border-slate-100 last:border-0">
+                <tr key={lead.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="px-4 py-2">
                     {leadName(lead)}
                   </td>
@@ -56,7 +56,7 @@ export default async function FrontDeskPage() {
                     {lead.status === "OPEN" && (
                       <Link
                         href={`/front-desk/leads/${lead.id}`}
-                        className="text-slate-900 underline"
+                        className="text-[var(--ink)] underline"
                       >
                         Review
                       </Link>

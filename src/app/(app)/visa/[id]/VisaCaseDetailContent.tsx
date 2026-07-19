@@ -111,7 +111,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
 
       <Card className="p-5">
         <SectionTitle>Active offer</SectionTitle>
-        <p className="text-sm text-slate-600 mb-3">
+        <p className="text-sm text-[var(--ink-soft)] mb-3">
           {visaCase.activeOffer
             ? `${visaCase.activeOffer.universityName} · ${visaCase.activeOffer.courseName} (${humanize(
                 visaCase.activeOffer.status
@@ -144,7 +144,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
         ) : (
           <table className="w-full text-sm mb-4">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="py-2 font-medium">Item</th>
                 <th className="py-2 font-medium">Source</th>
                 <th className="py-2 font-medium">Status</th>
@@ -153,7 +153,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
             </thead>
             <tbody>
               {visaCase.checklistItems.map((item) => (
-                <tr key={item.id} className="border-b border-slate-100 last:border-0">
+                <tr key={item.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="py-2">{item.title}</td>
                   <td className="py-2">
                     <Badge color={item.source === "BASE" ? "slate" : "purple"}>
@@ -171,7 +171,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
                         <select
                           name="status"
                           defaultValue={item.status}
-                          className="text-xs rounded border border-slate-300 px-1 py-0.5"
+                          className="text-xs rounded border border-[var(--paper-line)] px-1 py-0.5"
                         >
                           {CHECKLIST_STATUSES.map((s) => (
                             <option key={s} value={s}>
@@ -179,7 +179,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
                             </option>
                           ))}
                         </select>
-                        <button className="text-xs text-slate-900 underline">Save</button>
+                        <button className="text-xs text-[var(--ink)] underline">Save</button>
                       </form>
                     )}
                   </td>
@@ -190,7 +190,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
         )}
         {canEdit && (
           <details>
-            <summary className="text-sm text-slate-600 cursor-pointer">
+            <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
               + Add offer-specific requirement
             </summary>
             <form action={addChecklistItemAction} className="flex items-end gap-3 mt-3">
@@ -210,14 +210,14 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
         <SectionTitle>Attempts</SectionTitle>
         <div className="flex flex-col gap-4">
           {visaCase.attempts.map((attempt) => (
-            <div key={attempt.id} className="border border-slate-200 rounded-md p-4">
+            <div key={attempt.id} className="border border-[var(--paper-line)] rounded-md p-4">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-sm font-medium text-slate-900">
+                <p className="font-mono text-sm font-semibold text-[var(--ink)]">
                   Attempt {attempt.attemptNumber}
                 </p>
                 <Badge color={statusColor(attempt.status)}>{humanize(attempt.status)}</Badge>
               </div>
-              <ul className="text-sm text-slate-600 space-y-1 mb-3">
+              <ul className="text-sm text-[var(--ink-soft)] space-y-1 mb-3">
                 {attempt.events.map((e) => (
                   <li key={e.id}>
                     {e.eventDate.toLocaleDateString()} · {humanize(e.type)}

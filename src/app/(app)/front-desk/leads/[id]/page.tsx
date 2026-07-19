@@ -40,54 +40,54 @@ export default async function LeadDetailPage({
       <Card className="p-4 mb-6 text-sm">
         <dl className="grid grid-cols-2 gap-3">
           <div>
-            <dt className="text-slate-500">Phone</dt>
+            <dt className="text-[var(--ink-soft)]">Phone</dt>
             <dd>{lead.phone}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Email</dt>
+            <dt className="text-[var(--ink-soft)]">Email</dt>
             <dd>{lead.email ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Father&apos;s name</dt>
+            <dt className="text-[var(--ink-soft)]">Father&apos;s name</dt>
             <dd>{lead.fatherName ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Mother&apos;s name</dt>
+            <dt className="text-[var(--ink-soft)]">Mother&apos;s name</dt>
             <dd>{lead.motherName ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">School</dt>
+            <dt className="text-[var(--ink-soft)]">School</dt>
             <dd>{lead.schoolName}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">% received</dt>
+            <dt className="text-[var(--ink-soft)]">% received</dt>
             <dd>{lead.percentageReceived}%</dd>
           </div>
           <div>
-            <dt className="text-slate-500">University attended</dt>
+            <dt className="text-[var(--ink-soft)]">University attended</dt>
             <dd>{lead.universityAttended ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">Country intended</dt>
+            <dt className="text-[var(--ink-soft)]">Country intended</dt>
             <dd>{lead.intendedCountry?.name ?? "—"}</dd>
           </div>
           <div>
-            <dt className="text-slate-500">IELTS</dt>
+            <dt className="text-[var(--ink-soft)]">IELTS</dt>
             <dd>{lead.ieltsAttempted ? `Yes — ${lead.ieltsScore ?? "score not recorded"}` : "Not attempted"}</dd>
           </div>
           <div className="col-span-2">
-            <dt className="text-slate-500">Additional notes</dt>
+            <dt className="text-[var(--ink-soft)]">Additional notes</dt>
             <dd>{lead.additionalNotes ?? "—"}</dd>
           </div>
         </dl>
       </Card>
 
       {duplicates.length > 0 && (
-        <Card className="p-4 mb-6 border-amber-300 bg-amber-50">
-          <p className="text-sm font-medium text-amber-800 mb-2">
+        <Card className="p-4 mb-6 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">
+          <p className="text-sm font-medium text-[var(--status-amber-fg)] mb-2">
             Possible existing student match — confirm this is a new person before converting.
           </p>
-          <ul className="text-sm text-amber-900 space-y-1">
+          <ul className="text-sm text-[var(--status-amber-fg)] space-y-1">
             {duplicates.map((s) => (
               <li key={s.id}>
                 {studentName(s)} · {s.phone} · case manager:{" "}

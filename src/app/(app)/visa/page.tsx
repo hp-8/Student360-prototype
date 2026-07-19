@@ -36,7 +36,7 @@ export default async function VisaHomePage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-slate-200 text-left text-slate-500">
+              <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2 font-medium">Student</th>
                 <th className="px-4 py-2 font-medium">Country</th>
                 <th className="px-4 py-2 font-medium">Latest attempt</th>
@@ -45,9 +45,9 @@ export default async function VisaHomePage() {
             </thead>
             <tbody>
               {visaCases.map((vc) => (
-                <tr key={vc.id} className="border-b border-slate-100 last:border-0">
+                <tr key={vc.id} className="border-b border-[var(--paper-line)] last:border-0">
                   <td className="px-4 py-2">
-                    <Link href={`/visa/${vc.id}`} className="underline text-slate-900">
+                    <Link href={`/visa/${vc.id}`} className="underline text-[var(--ink)]">
                       {studentName(vc.student)}
                     </Link>
                   </td>
