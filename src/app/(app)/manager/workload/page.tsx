@@ -4,6 +4,8 @@ import { PageHeader, Card, SectionTitle, Badge, EmptyState } from "@/components/
 import { statusColor, humanize } from "@/lib/statusColors";
 import { staffName, studentName } from "@/lib/displayName";
 import { Tabs } from "@/components/Tabs";
+import { computeQueueCounts } from "@/lib/domain/workQueue";
+import { QueueTiles } from "@/components/QueueTiles";
 
 export default async function WorkloadPage() {
   await requireRole("MANAGER");
@@ -23,8 +25,7 @@ export default async function WorkloadPage() {
 
   const byDepartment = departments.map((dept) => {
     const items = workItems.filter((w) => w.department === dept);
-    const pending = items.filter((w) => w.status !== "DONE");
-    return { dept, total: items.length, pending: pending.length, items };
+    return { dept, items, counts: computeQueueCounts(items) };
   });
 
   const staffMap = new Map<string, { name: string; items: typeof workItems }>();
@@ -47,30 +48,19 @@ export default async function WorkloadPage() {
     }))
     .sort((a, b) => b.pending - a.pending);
 
-  const byDepartmentTab = (
-    <Card className="p-5">
-      <SectionTitle>By department</SectionTitle>
-      <table className="w-full text-sm">
-        <thead>
-          <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
-            <th className="py-2 font-medium">Department</th>
-            <th className="py-2 font-medium">Total</th>
-            <th className="py-2 font-medium">Pending</th>
-          </tr>
-        </thead>
-        <tbody>
-          {byDepartment.map((d) => (
-            <tr key={d.dept} className="border-b border-[var(--paper-line)] last:border-0">
-              <td className="py-2">{humanize(d.dept)}</td>
-              <td className="py-2">{d.total}</td>
-              <td className="py-2">
-                <Badge color={d.pending > 0 ? "amber" : "green"}>{d.pending}</Badge>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </Card>
+  const workQueueTab = (
+    <div className="grid grid-cols-2 gap-4">
+      {byDepartment.map((d) => (
+        <Card key={d.dept} className="p-5">
+          <SectionTitle>{humanize(d.dept)}</SectionTitle>
+          {d.items.length === 0 ? (
+            <EmptyState>No work items in this department.</EmptyState>
+          ) : (
+            <QueueTiles counts={d.counts} dense />
+          )}
+        </Card>
+      ))}
+    </div>
   );
 
   const byStaffTab = (
@@ -111,7 +101,7 @@ export default async function WorkloadPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Workload & ownership"
-        description="Who owns what right now, and where the load is concentrated. A separate lens from the aggregate pipeline counts."
+        description="What each department needs to do today, and who owns what right now. A separate lens from the aggregate pipeline counts."
       />
 
       {unassignedItems.length > 0 && (
@@ -135,7 +125,7 @@ export default async function WorkloadPage() {
 
       <Tabs
         tabs={[
-          { label: "By department", content: byDepartmentTab },
+          { label: "Work Queue", content: workQueueTab },
           { label: "By staff", content: byStaffTab },
         ]}
       />

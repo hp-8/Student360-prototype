@@ -12,9 +12,11 @@ import {
   Button,
 } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
+import { Timeline } from "@/components/Timeline";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { getDirectReports } from "@/lib/domain/hierarchy";
 import { hasCaseAccess } from "@/lib/domain/audit";
+import { buildStudentTimeline } from "@/lib/domain/timeline";
 import { staffName, studentName } from "@/lib/displayName";
 import {
   createStudyOptionAction,
@@ -61,7 +63,10 @@ export async function StudentDetailContent({ id }: { id: string }) {
           visaRoute: true,
           activeOffer: true,
           assignedTo: true,
-          attempts: { orderBy: { attemptNumber: "desc" } },
+          attempts: {
+            include: { events: { orderBy: { eventDate: "asc" } } },
+            orderBy: { attemptNumber: "desc" },
+          },
         },
         orderBy: { openedAt: "desc" },
       },
@@ -117,6 +122,14 @@ export async function StudentDetailContent({ id }: { id: string }) {
       createdAt: a.createdAt,
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const timelineEntries = buildStudentTimeline(student);
+  const timelineTab = (
+    <Card className="p-5">
+      <SectionTitle>Journey</SectionTitle>
+      <Timeline entries={timelineEntries} />
+    </Card>
+  );
 
   const overviewTab = (
     <>
@@ -493,6 +506,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
   );
 
   const tabs = [
+    { label: "Journey", content: timelineTab },
     { label: "Overview", content: overviewTab },
     { label: "Study Options", content: studyOptionsTab },
     ...(showVisaSection ? [{ label: "Visa Cases", content: visaTab }] : []),

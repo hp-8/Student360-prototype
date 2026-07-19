@@ -6,6 +6,8 @@ import { statusColor, humanize } from "@/lib/statusColors";
 import { assignWorkItemAction, updateWorkItemStatusAction, createWorkItemAction } from "./actions";
 import { getDirectReports } from "@/lib/domain/hierarchy";
 import { staffName, studentName } from "@/lib/displayName";
+import { computeQueueCounts } from "@/lib/domain/workQueue";
+import { QueueTiles } from "@/components/QueueTiles";
 
 export default async function WorkItemsPage() {
   const session = await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
@@ -38,6 +40,7 @@ export default async function WorkItemsPage() {
   ]);
 
   const canAssign = session.role === "COUNSELLOR" || session.role === "MANAGER";
+  const queueCounts = computeQueueCounts(myItems);
 
   return (
     <div className="flex flex-col gap-6">
@@ -49,6 +52,11 @@ export default async function WorkItemsPage() {
             : "Work items assigned to you."
         }
       />
+
+      <Card className="p-5">
+        <SectionTitle>{session.role === "MANAGER" ? "Org-wide queue" : "My queue"}</SectionTitle>
+        <QueueTiles counts={queueCounts} />
+      </Card>
 
       {unassignedForMyStudents.length > 0 && (
         <Card className="p-5 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">

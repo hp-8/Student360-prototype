@@ -32,6 +32,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
   MANAGER: [
     { href: "/manager", label: "Pipeline" },
     { href: "/manager/workload", label: "Workload" },
+    { href: "/manager/assignments", label: "Assignments" },
     { href: "/manager/students", label: "All Students" },
     { href: "/work-items", label: "Work Items" },
   ],
