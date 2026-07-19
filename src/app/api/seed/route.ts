@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { seedDatabase } from "../../../../prisma/seedData";
 
-export async function POST(request: NextRequest) {
-  const provided = request.headers.get("x-seed-secret");
+async function runSeed(providedSecret: string | null) {
   const expected = process.env.SEED_SECRET;
 
-  if (!expected || provided !== expected) {
+  if (!expected || providedSecret !== expected) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,4 +17,15 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+export async function POST(request: NextRequest) {
+  return runSeed(request.headers.get("x-seed-secret"));
+}
+
+// GET support exists so the seed can be triggered by visiting a URL directly
+// in a browser (no terminal/curl needed) — gated by the same shared secret.
+export async function GET(request: NextRequest) {
+  const secret = request.nextUrl.searchParams.get("secret");
+  return runSeed(secret);
 }
