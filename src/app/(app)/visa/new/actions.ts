@@ -25,16 +25,19 @@ export async function openVisaCaseAction(formData: FormData) {
   if (offerMode === "existing") {
     activeOfferId = String(formData.get("existingOfferId") ?? "") || null;
   } else if (offerMode === "external") {
-    const offer = await recordOffer({
-      studentId,
-      countryId: visaRoute.countryId,
-      universityName: String(formData.get("universityName")).trim(),
-      courseName: String(formData.get("courseName")).trim(),
-      intake: String(formData.get("intake")).trim(),
-      status: String(formData.get("offerStatus")) as OfferStatus,
-      isExternal: true,
-      notes: "Externally sourced offer, no internal study option on file.",
-    });
+    const offer = await recordOffer(
+      {
+        studentId,
+        countryId: visaRoute.countryId,
+        universityName: String(formData.get("universityName")).trim(),
+        courseName: String(formData.get("courseName")).trim(),
+        intake: String(formData.get("intake")).trim(),
+        status: String(formData.get("offerStatus")) as OfferStatus,
+        isExternal: true,
+        notes: "Externally sourced offer, no internal study option on file.",
+      },
+      session.id
+    );
     activeOfferId = offer.id;
   }
 

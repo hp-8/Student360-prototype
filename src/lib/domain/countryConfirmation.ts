@@ -1,4 +1,8 @@
+import type { Prisma, PrismaClient } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/domain/audit";
+
+type Db = PrismaClient | Prisma.TransactionClient;
 
 export async function confirmCountry(
   studentId: string,
@@ -40,18 +44,38 @@ export async function confirmCountry(
       },
     });
 
+    await logActivity(tx, {
+      studentId,
+      actorId: byUserId,
+      action: `Confirmed ${country.name} as the study destination`,
+      entityType: "CountryConfirmation",
+      entityId: confirmation.id,
+    });
+
     return confirmation;
   });
 }
 
 export async function releaseCountryConfirmation(
   studentId: string,
-  countryId: string
+  countryId: string,
+  byUserId: string,
+  db: Db = prisma
 ) {
-  return prisma.countryConfirmation.updateMany({
+  const result = await db.countryConfirmation.updateMany({
     where: { studentId, countryId, releasedAt: null },
     data: { releasedAt: new Date() },
   });
+  if (result.count > 0) {
+    const country = await db.country.findUniqueOrThrow({ where: { id: countryId } });
+    await logActivity(db, {
+      studentId,
+      actorId: byUserId,
+      action: `Released the confirmed ${country.name} route`,
+      entityType: "CountryConfirmation",
+    });
+  }
+  return result;
 }
 
 export async function isCountryConfirmed(studentId: string, countryId: string) {

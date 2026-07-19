@@ -1,17 +1,31 @@
 import { prisma } from "@/lib/prisma";
 import type { ApplicationStatus, OfferStatus, StudyOptionStatus } from "@prisma/client";
+import { logActivity } from "@/lib/domain/audit";
 
-export async function createStudyOption(data: {
-  studentId: string;
-  countryId: string;
-  universityName: string;
-  courseName: string;
-  intake: string;
-  assignedCounsellorId?: string | null;
-  assignedAppsUserId?: string | null;
-  notes?: string | null;
-}) {
-  return prisma.studyOption.create({ data });
+export async function createStudyOption(
+  data: {
+    studentId: string;
+    countryId: string;
+    universityName: string;
+    courseName: string;
+    intake: string;
+    assignedCounsellorId?: string | null;
+    assignedAppsUserId?: string | null;
+    notes?: string | null;
+  },
+  byUserId: string
+) {
+  return prisma.$transaction(async (tx) => {
+    const option = await tx.studyOption.create({ data });
+    await logActivity(tx, {
+      studentId: data.studentId,
+      actorId: byUserId,
+      action: `Added study option: ${data.universityName} (${data.courseName})`,
+      entityType: "StudyOption",
+      entityId: option.id,
+    });
+    return option;
+  });
 }
 
 export async function updateStudyOptionStatus(
@@ -43,26 +57,38 @@ export async function updateApplicationStatus(
   });
 }
 
-export async function recordOffer(data: {
-  studentId: string;
-  countryId: string;
-  applicationId?: string | null;
-  universityName: string;
-  courseName: string;
-  intake: string;
-  status?: OfferStatus;
-  isExternal?: boolean;
-  conditions?: string | null;
-  notes?: string | null;
-}) {
-  const offer = await prisma.offer.create({ data });
-  if (data.applicationId) {
-    await prisma.applicationRecord.update({
-      where: { id: data.applicationId },
-      data: { status: "DECIDED" },
+export async function recordOffer(
+  data: {
+    studentId: string;
+    countryId: string;
+    applicationId?: string | null;
+    universityName: string;
+    courseName: string;
+    intake: string;
+    status?: OfferStatus;
+    isExternal?: boolean;
+    conditions?: string | null;
+    notes?: string | null;
+  },
+  byUserId: string
+) {
+  return prisma.$transaction(async (tx) => {
+    const offer = await tx.offer.create({ data });
+    if (data.applicationId) {
+      await tx.applicationRecord.update({
+        where: { id: data.applicationId },
+        data: { status: "DECIDED" },
+      });
+    }
+    await logActivity(tx, {
+      studentId: data.studentId,
+      actorId: byUserId,
+      action: `Recorded offer from ${data.universityName}${data.isExternal ? " (external)" : ""}`,
+      entityType: "Offer",
+      entityId: offer.id,
     });
-  }
-  return offer;
+    return offer;
+  });
 }
 
 export async function updateOfferStatus(offerId: string, status: OfferStatus) {

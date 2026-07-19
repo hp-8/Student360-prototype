@@ -12,15 +12,18 @@ import { revalidatePath } from "next/cache";
 export async function createStudyOptionAction(formData: FormData) {
   const session = await requireRole("COUNSELLOR", "MANAGER");
   const studentId = String(formData.get("studentId"));
-  await createStudyOption({
-    studentId,
-    countryId: String(formData.get("countryId")),
-    universityName: String(formData.get("universityName")).trim(),
-    courseName: String(formData.get("courseName")).trim(),
-    intake: String(formData.get("intake")).trim(),
-    assignedCounsellorId: session.role === "COUNSELLOR" ? session.id : String(formData.get("assignedCounsellorId") || "") || null,
-    assignedAppsUserId: String(formData.get("assignedAppsUserId") || "") || null,
-  });
+  await createStudyOption(
+    {
+      studentId,
+      countryId: String(formData.get("countryId")),
+      universityName: String(formData.get("universityName")).trim(),
+      courseName: String(formData.get("courseName")).trim(),
+      intake: String(formData.get("intake")).trim(),
+      assignedCounsellorId: session.role === "COUNSELLOR" ? session.id : String(formData.get("assignedCounsellorId") || "") || null,
+      assignedAppsUserId: String(formData.get("assignedAppsUserId") || "") || null,
+    },
+    session.id
+  );
   revalidatePath(`/students/${studentId}`);
 }
 

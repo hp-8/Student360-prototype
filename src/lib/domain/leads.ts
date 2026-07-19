@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/domain/audit";
 
 export async function findDuplicateStudents(params: {
   firstName: string;
@@ -133,6 +134,14 @@ export async function convertLeadToStudent(
     await tx.lead.update({
       where: { id: leadId },
       data: { status: "CONVERTED", convertedStudentId: student.id },
+    });
+
+    await logActivity(tx, {
+      studentId: student.id,
+      actorId: byUserId,
+      action: "Converted enquiry to student",
+      entityType: "Student",
+      entityId: student.id,
     });
 
     return student;

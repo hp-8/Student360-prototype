@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import type { VisaAttemptStatus, VisaEventType } from "@prisma/client";
 import { releaseCountryConfirmation } from "./countryConfirmation";
+import { logActivity } from "@/lib/domain/audit";
+import { humanize } from "@/lib/statusColors";
 
 type ChecklistTemplateItem = {
   title: string;
@@ -71,6 +73,14 @@ export async function openVisaCase(params: {
       },
     });
 
+    await logActivity(tx, {
+      studentId: params.studentId,
+      actorId: params.byUserId,
+      action: "Opened a visa case",
+      entityType: "VisaCase",
+      entityId: visaCase.id,
+    });
+
     return visaCase;
   });
 }
@@ -125,6 +135,13 @@ export async function changeActiveOffer(
         body: `Active offer for the visa case switched to ${offer.universityName}.`,
       },
     });
+    await logActivity(tx, {
+      studentId: visaCase.studentId,
+      actorId: byUserId,
+      action: `Switched the active offer to ${offer.universityName}`,
+      entityType: "VisaCase",
+      entityId: visaCaseId,
+    });
     return visaCase;
   });
 }
@@ -148,6 +165,7 @@ export async function updateVisaAttempt(params: {
         status: params.newStatus,
         decidedAt: decided ? new Date() : undefined,
       },
+      include: { visaCase: { select: { studentId: true } } },
     });
 
     await tx.visaEvent.create({
@@ -158,6 +176,14 @@ export async function updateVisaAttempt(params: {
         createdById: params.byUserId,
         eventDate: params.eventDate ?? new Date(),
       },
+    });
+
+    await logActivity(tx, {
+      studentId: attempt.visaCase.studentId,
+      actorId: params.byUserId,
+      action: `Visa attempt status changed to ${humanize(params.newStatus)}`,
+      entityType: "VisaAttempt",
+      entityId: attempt.id,
     });
 
     return attempt;
@@ -197,9 +223,17 @@ export async function reopenAttempt(
       },
     });
 
-    await tx.visaCase.update({
+    const visaCase = await tx.visaCase.update({
       where: { id: visaCaseId },
       data: { lifecycleStatus: "OPEN" },
+    });
+
+    await logActivity(tx, {
+      studentId: visaCase.studentId,
+      actorId: byUserId,
+      action: `Reopened the case with attempt #${attempt.attemptNumber} after refusal`,
+      entityType: "VisaAttempt",
+      entityId: attempt.id,
     });
 
     return attempt;
@@ -223,7 +257,7 @@ export async function closeVisaCase(params: {
       },
     });
 
-    await releaseCountryConfirmation(visaCase.studentId, visaCase.countryId);
+    await releaseCountryConfirmation(visaCase.studentId, visaCase.countryId, params.byUserId, tx);
 
     if (params.reason === "PIVOTED" && params.pivotToStudyOptionId) {
       await tx.studyOption.update({
@@ -246,6 +280,17 @@ export async function closeVisaCase(params: {
                 params.notes ? ` ${params.notes}` : ""
               }`,
       },
+    });
+
+    await logActivity(tx, {
+      studentId: visaCase.studentId,
+      actorId: params.byUserId,
+      action:
+        params.reason === "PIVOTED"
+          ? "Closed the visa case to pivot to a different study option"
+          : "Closed the visa case (plan ended)",
+      entityType: "VisaCase",
+      entityId: visaCase.id,
     });
 
     return visaCase;

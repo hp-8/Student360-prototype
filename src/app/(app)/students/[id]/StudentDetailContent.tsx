@@ -14,6 +14,7 @@ import {
 import { Tabs } from "@/components/Tabs";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { getDirectReports } from "@/lib/domain/hierarchy";
+import { hasCaseAccess } from "@/lib/domain/audit";
 import { staffName, studentName } from "@/lib/displayName";
 import {
   createStudyOptionAction,
@@ -89,6 +90,33 @@ export async function StudentDetailContent({ id }: { id: string }) {
   const confirmedCountryIds = new Set(
     student.countryConfirmations.filter((c) => !c.releasedAt).map((c) => c.countryId)
   );
+
+  const canSeeSystemActivity = await hasCaseAccess(session, student.id);
+  const auditLogs = canSeeSystemActivity
+    ? await prisma.auditLog.findMany({
+        where: { studentId: student.id },
+        include: { actor: true },
+        orderBy: { createdAt: "desc" },
+      })
+    : [];
+
+  type FeedEntry = { id: string; kind: "note" | "action"; body: string; actorName: string; createdAt: Date };
+  const activityFeed: FeedEntry[] = [
+    ...student.notes.map((n): FeedEntry => ({
+      id: `note-${n.id}`,
+      kind: "note",
+      body: n.body,
+      actorName: staffName(n.author),
+      createdAt: n.createdAt,
+    })),
+    ...auditLogs.map((a): FeedEntry => ({
+      id: `audit-${a.id}`,
+      kind: "action",
+      body: a.action,
+      actorName: staffName(a.actor),
+      createdAt: a.createdAt,
+    })),
+  ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
 
   const overviewTab = (
     <>
@@ -417,9 +445,9 @@ export async function StudentDetailContent({ id }: { id: string }) {
     </Card>
   );
 
-  const notesTab = (
+  const activityTab = (
     <Card className="p-5">
-      <SectionTitle>Notes</SectionTitle>
+      <SectionTitle>Activity</SectionTitle>
       <form action={addNoteAction} className="flex gap-3 mb-4">
         <input type="hidden" name="studentId" value={student.id} />
         <input
@@ -432,16 +460,30 @@ export async function StudentDetailContent({ id }: { id: string }) {
           Add
         </Button>
       </form>
-      {student.notes.length === 0 ? (
-        <EmptyState>No notes yet.</EmptyState>
+      {!canSeeSystemActivity && (
+        <p className="text-xs text-[var(--ink-soft)]/70 italic mb-3">
+          Showing notes only. System activity is visible to staff currently working this case,
+          plus Managers and Administrators.
+        </p>
+      )}
+      {activityFeed.length === 0 ? (
+        <EmptyState>No activity yet.</EmptyState>
       ) : (
         <ul className="flex flex-col gap-3">
-          {student.notes.map((n) => (
-            <li key={n.id} className="text-sm border-l-2 border-slate-200 pl-3">
-              <p className="text-slate-800">{n.body}</p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {staffName(n.author)} · {n.createdAt.toLocaleString()}
-                {n.category !== "GENERAL" ? ` · ${humanize(n.category)}` : ""}
+          {activityFeed.map((entry) => (
+            <li
+              key={entry.id}
+              className={`text-sm pl-3 ${
+                entry.kind === "note"
+                  ? "border-l-2 border-[var(--brass-soft)]"
+                  : "border-l-2 border-[var(--paper-line)]"
+              }`}
+            >
+              <p className={entry.kind === "note" ? "text-[var(--ink)]" : "text-[var(--ink-soft)] italic"}>
+                {entry.body}
+              </p>
+              <p className="text-xs text-[var(--ink-soft)]/70 mt-0.5">
+                {entry.actorName} · {entry.createdAt.toLocaleString()}
               </p>
             </li>
           ))}
@@ -455,7 +497,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
     { label: "Study Options", content: studyOptionsTab },
     ...(showVisaSection ? [{ label: "Visa Cases", content: visaTab }] : []),
     { label: "Documents", content: documentsTab },
-    { label: "Notes", content: notesTab },
+    { label: "Activity", content: activityTab },
   ];
 
   return (

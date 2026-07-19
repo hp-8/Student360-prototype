@@ -1,51 +1,34 @@
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge } from "@/components/ui";
-import { statusColor, humanize } from "@/lib/statusColors";
+import { computeStudentStage, stageColor, type StudentStage } from "@/lib/domain/stage";
 
-async function countBy<T extends string>(
-  rows: { status: T }[]
-): Promise<Record<string, number>> {
-  const out: Record<string, number> = {};
-  for (const r of rows) out[r.status] = (out[r.status] ?? 0) + 1;
-  return out;
-}
-
-function StatusBreakdown({ counts }: { counts: Record<string, number> }) {
-  const entries = Object.entries(counts);
-  if (entries.length === 0) return <p className="text-sm text-slate-400 italic">No data.</p>;
-  return (
-    <div className="flex flex-wrap gap-2">
-      {entries.map(([status, count]) => (
-        <Badge key={status} color={statusColor(status)}>
-          {humanize(status)}: {count}
-        </Badge>
-      ))}
-    </div>
-  );
-}
+const STAGE_ORDER: StudentStage[] = [
+  "New",
+  "Exploring Options",
+  "Offer Received",
+  "Country Confirmed",
+  "Visa In Progress",
+  "Visa Refused",
+  "Visa Approved",
+  "Closed",
+];
 
 export default async function ManagerDashboardPage() {
   await requireRole("MANAGER");
 
-  const [
-    studentCount,
-    studyOptions,
-    applications,
-    offers,
-    visaCases,
-    pendingWorkItems,
-    countryConfirmations,
-  ] = await Promise.all([
-    prisma.student.count(),
-    prisma.studyOption.findMany({ select: { status: true } }),
-    prisma.applicationRecord.findMany({ select: { status: true } }),
-    prisma.offer.findMany({ select: { status: true } }),
-    prisma.visaCase.findMany({
+  const [students, pendingWorkItems, countryConfirmations, visaCaseCount] = await Promise.all([
+    prisma.student.findMany({
       select: {
-        id: true,
-        lifecycleStatus: true,
-        attempts: { select: { status: true }, orderBy: { attemptNumber: "desc" }, take: 1 },
+        studyOptions: { select: { id: true } },
+        offers: { select: { status: true } },
+        countryConfirmations: { select: { releasedAt: true } },
+        visaCases: {
+          select: {
+            lifecycleStatus: true,
+            attempts: { select: { status: true }, orderBy: { attemptNumber: "desc" }, take: 1 },
+          },
+        },
       },
     }),
     prisma.workItem.count({ where: { status: { not: "DONE" } } }),
@@ -53,15 +36,18 @@ export default async function ManagerDashboardPage() {
       where: { releasedAt: null },
       include: { country: true },
     }),
+    prisma.visaCase.count({ where: { lifecycleStatus: "OPEN" } }),
   ]);
 
-  const studyOptionCounts = await countBy(studyOptions);
-  const applicationCounts = await countBy(applications);
-  const offerCounts = await countBy(offers);
-  const lifecycleCounts = await countBy(visaCases.map((v) => ({ status: v.lifecycleStatus })));
+  const stageCounts = new Map<StudentStage, number>(STAGE_ORDER.map((s) => [s, 0]));
+  for (const s of students) {
+    const stage = computeStudentStage(s);
+    stageCounts.set(stage, (stageCounts.get(stage) ?? 0) + 1);
+  }
 
   const outcomeCounts: Record<string, number> = { APPROVED: 0, REFUSED: 0, WITHDRAWN: 0, IN_PROGRESS: 0 };
-  for (const vc of visaCases) {
+  const allVisaCases = students.flatMap((s) => s.visaCases);
+  for (const vc of allVisaCases) {
     const latest = vc.attempts[0]?.status;
     if (latest === "APPROVED" || latest === "REFUSED" || latest === "WITHDRAWN") {
       outcomeCounts[latest]++;
@@ -76,22 +62,20 @@ export default async function ManagerDashboardPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <PageHeader
         title="Pipeline overview"
-        description="Aggregate counts across the full student lifecycle. Visa outcomes are counted per visa case, not per student."
+        description="Where every student stands right now. Visa outcomes are counted per visa case, not per student."
       />
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-5">
           <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Total students</p>
-          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{studentCount}</p>
+          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{students.length}</p>
         </Card>
         <Card className="p-5">
           <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Open visa cases</p>
-          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">
-            {visaCases.filter((v) => v.lifecycleStatus === "OPEN").length}
-          </p>
+          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{visaCaseCount}</p>
         </Card>
         <Card className="p-5">
           <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Pending work items</p>
@@ -100,44 +84,48 @@ export default async function ManagerDashboardPage() {
       </div>
 
       <Card className="p-5">
-        <SectionTitle>Study options by status</SectionTitle>
-        <StatusBreakdown counts={studyOptionCounts} />
+        <SectionTitle>Students by stage</SectionTitle>
+        <div className="grid grid-cols-4 gap-3">
+          {STAGE_ORDER.map((stage) => (
+            <div
+              key={stage}
+              className="border border-[var(--paper-line)] rounded-md px-3 py-2.5 flex flex-col gap-1"
+            >
+              <Badge color={stageColor(stage)}>{stage}</Badge>
+              <span className="font-display text-2xl font-semibold text-[var(--navy-deep)]">
+                {stageCounts.get(stage) ?? 0}
+              </span>
+            </div>
+          ))}
+        </div>
       </Card>
 
-      <Card className="p-5">
-        <SectionTitle>Applications by status</SectionTitle>
-        <StatusBreakdown counts={applicationCounts} />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle>Offers by status</SectionTitle>
-        <StatusBreakdown counts={offerCounts} />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle>Visa cases by lifecycle status</SectionTitle>
-        <StatusBreakdown counts={lifecycleCounts} />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle>Visa outcomes (counted at case level)</SectionTitle>
-        <StatusBreakdown counts={outcomeCounts} />
-      </Card>
-
-      <Card className="p-5">
-        <SectionTitle>Students by confirmed country</SectionTitle>
-        {Object.keys(studentsByCountry).length === 0 ? (
-          <p className="text-sm text-slate-400 italic">No confirmed routes yet.</p>
-        ) : (
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="p-5">
+          <SectionTitle>Visa outcomes (case level)</SectionTitle>
           <div className="flex flex-wrap gap-2">
-            {Object.entries(studentsByCountry).map(([country, count]) => (
-              <Badge key={country} color="blue">
-                {country}: {count}
-              </Badge>
-            ))}
+            <Badge color="green">Approved: {outcomeCounts.APPROVED}</Badge>
+            <Badge color="red">Refused: {outcomeCounts.REFUSED}</Badge>
+            <Badge color="slate">Withdrawn: {outcomeCounts.WITHDRAWN}</Badge>
+            <Badge color="amber">In progress: {outcomeCounts.IN_PROGRESS}</Badge>
           </div>
-        )}
-      </Card>
+        </Card>
+
+        <Card className="p-5">
+          <SectionTitle>Students by confirmed country</SectionTitle>
+          {Object.keys(studentsByCountry).length === 0 ? (
+            <p className="text-sm text-[var(--ink-soft)]/60 italic">No confirmed routes yet.</p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {Object.entries(studentsByCountry).map(([country, count]) => (
+                <Badge key={country} color="blue">
+                  {country}: {count}
+                </Badge>
+              ))}
+            </div>
+          )}
+        </Card>
+      </div>
     </div>
   );
 }

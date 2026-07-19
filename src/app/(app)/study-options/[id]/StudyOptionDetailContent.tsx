@@ -75,6 +75,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
         {canEditStatus && (
           <form action={updateStudyOptionStatusAction} className="flex items-end gap-3">
             <input type="hidden" name="studyOptionId" value={studyOption.id} />
+            <input type="hidden" name="studentId" value={studyOption.studentId} />
             <Field label="Change status">
               <select name="status" defaultValue={studyOption.status} className={inputClass}>
                 {STUDY_OPTION_STATUSES.map((s) => (
@@ -108,6 +109,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                 {canEditApplications && (
                   <form action={updateApplicationStatusAction} className="flex items-end gap-3 mb-3">
                     <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                    <input type="hidden" name="studentId" value={studyOption.studentId} />
                     <input type="hidden" name="applicationId" value={app.id} />
                     <Field label="Application status">
                       <select name="status" defaultValue={app.status} className={inputClass}>
@@ -139,6 +141,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                         {app.offer.status === "UNCONDITIONAL" && (
                           <form action={updateOfferStatusAction}>
                             <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                            <input type="hidden" name="studentId" value={studyOption.studentId} />
                             <input type="hidden" name="offerId" value={app.offer.id} />
                             <input type="hidden" name="status" value="ACCEPTED" />
                             <Button type="submit">Accept this offer</Button>
@@ -146,6 +149,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                         )}
                         <form action={updateOfferStatusAction} className="flex items-end gap-3">
                           <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                          <input type="hidden" name="studentId" value={studyOption.studentId} />
                           <input type="hidden" name="offerId" value={app.offer.id} />
                           <Field label="Offer status">
                             <select name="status" defaultValue={app.offer.status} className={inputClass}>
@@ -209,6 +213,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
             </summary>
             <form action={createApplicationAction} className="flex items-end gap-3 mt-3">
               <input type="hidden" name="studyOptionId" value={studyOption.id} />
+              <input type="hidden" name="studentId" value={studyOption.studentId} />
               <Field label="Notes (optional)">
                 <input name="notes" className={inputClass} />
               </Field>
@@ -237,6 +242,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
                 {canEditApplications && (
                   <form action={updateSopStatusAction} className="flex items-end gap-3">
                     <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                    <input type="hidden" name="studentId" value={studyOption.studentId} />
                     <input type="hidden" name="sopId" value={sop.id} />
                     <Field label="Status">
                       <select name="status" defaultValue={sop.status} className={inputClass}>
@@ -259,6 +265,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
         {canEditApplications && (
           <form action={createSopRecordAction} className="flex items-end gap-3">
             <input type="hidden" name="studyOptionId" value={studyOption.id} />
+            <input type="hidden" name="studentId" value={studyOption.studentId} />
             <Button type="submit" variant="secondary">
               Start SOP record
             </Button>

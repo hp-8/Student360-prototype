@@ -250,49 +250,61 @@ export async function seedDatabase() {
     },
   });
 
-  const ananyaGermanyOption = await createStudyOption({
-    studentId: ananya.id,
-    countryId: germany.id,
-    universityName: "RWTH Aachen University",
-    courseName: "MSc Computer Science",
-    intake: "Fall 2026",
-    assignedCounsellorId: counsellor.id,
-    assignedAppsUserId: appsTeam.id,
-  });
-  const ananyaUkOption = await createStudyOption({
-    studentId: ananya.id,
-    countryId: uk.id,
-    universityName: "University of Manchester",
-    courseName: "MSc Data Science",
-    intake: "Fall 2026",
-    assignedCounsellorId: counsellor.id,
-    assignedAppsUserId: appsTeam.id,
-  });
+  const ananyaGermanyOption = await createStudyOption(
+    {
+      studentId: ananya.id,
+      countryId: germany.id,
+      universityName: "RWTH Aachen University",
+      courseName: "MSc Computer Science",
+      intake: "Fall 2026",
+      assignedCounsellorId: counsellor.id,
+      assignedAppsUserId: appsTeam.id,
+    },
+    counsellor.id
+  );
+  const ananyaUkOption = await createStudyOption(
+    {
+      studentId: ananya.id,
+      countryId: uk.id,
+      universityName: "University of Manchester",
+      courseName: "MSc Data Science",
+      intake: "Fall 2026",
+      assignedCounsellorId: counsellor.id,
+      assignedAppsUserId: appsTeam.id,
+    },
+    counsellor.id
+  );
 
   const ananyaGermanyApp = await createApplication({ studyOptionId: ananyaGermanyOption.id });
   const ananyaUkApp = await createApplication({ studyOptionId: ananyaUkOption.id });
 
-  const ananyaGermanyOffer = await recordOffer({
-    studentId: ananya.id,
-    countryId: germany.id,
-    applicationId: ananyaGermanyApp.id,
-    universityName: "RWTH Aachen University",
-    courseName: "MSc Computer Science",
-    intake: "Fall 2026",
-    status: "CONDITIONAL",
-  });
+  const ananyaGermanyOffer = await recordOffer(
+    {
+      studentId: ananya.id,
+      countryId: germany.id,
+      applicationId: ananyaGermanyApp.id,
+      universityName: "RWTH Aachen University",
+      courseName: "MSc Computer Science",
+      intake: "Fall 2026",
+      status: "CONDITIONAL",
+    },
+    appsTeam.id
+  );
   await updateOfferStatus(ananyaGermanyOffer.id, "UNCONDITIONAL");
   await updateOfferStatus(ananyaGermanyOffer.id, "ACCEPTED");
 
-  const ananyaUkOffer = await recordOffer({
-    studentId: ananya.id,
-    countryId: uk.id,
-    applicationId: ananyaUkApp.id,
-    universityName: "University of Manchester",
-    courseName: "MSc Data Science",
-    intake: "Fall 2026",
-    status: "REJECTED",
-  });
+  const ananyaUkOffer = await recordOffer(
+    {
+      studentId: ananya.id,
+      countryId: uk.id,
+      applicationId: ananyaUkApp.id,
+      universityName: "University of Manchester",
+      courseName: "MSc Data Science",
+      intake: "Fall 2026",
+      status: "REJECTED",
+    },
+    appsTeam.id
+  );
   await prisma.studyOption.update({ where: { id: ananyaUkOption.id }, data: { status: "REJECTED" } });
 
   await confirmCountry(ananya.id, germany.id, counsellor.id, "Accepted RWTH Aachen offer; proceeding with Germany.");
@@ -371,36 +383,45 @@ export async function seedDatabase() {
     data: { studentId: rohan.id, staffId: counsellor2.id, assignedById: frontDesk.id, note: "Initial case manager assignment on conversion from enquiry." },
   });
 
-  const rohanGermanyOption = await createStudyOption({
-    studentId: rohan.id,
-    countryId: germany.id,
-    universityName: "TU Munich",
-    courseName: "MSc Mechanical Engineering",
-    intake: "Spring 2026",
-    assignedCounsellorId: counsellor2.id,
-    assignedAppsUserId: appsTeam2.id,
-  });
-  const rohanUkOption = await createStudyOption({
-    studentId: rohan.id,
-    countryId: uk.id,
-    universityName: "University of Leeds",
-    courseName: "MSc Mechanical Engineering",
-    intake: "Spring 2026",
-    assignedCounsellorId: counsellor2.id,
-    assignedAppsUserId: appsTeam2.id,
-  });
+  const rohanGermanyOption = await createStudyOption(
+    {
+      studentId: rohan.id,
+      countryId: germany.id,
+      universityName: "TU Munich",
+      courseName: "MSc Mechanical Engineering",
+      intake: "Spring 2026",
+      assignedCounsellorId: counsellor2.id,
+      assignedAppsUserId: appsTeam2.id,
+    },
+    counsellor2.id
+  );
+  const rohanUkOption = await createStudyOption(
+    {
+      studentId: rohan.id,
+      countryId: uk.id,
+      universityName: "University of Leeds",
+      courseName: "MSc Mechanical Engineering",
+      intake: "Spring 2026",
+      assignedCounsellorId: counsellor2.id,
+      assignedAppsUserId: appsTeam2.id,
+    },
+    counsellor2.id
+  );
   await prisma.studyOption.update({ where: { id: rohanUkOption.id }, data: { status: "ON_HOLD" } });
 
   const rohanGermanyApp = await createApplication({ studyOptionId: rohanGermanyOption.id });
-  const rohanGermanyOffer = await recordOffer({
-    studentId: rohan.id,
-    countryId: germany.id,
-    applicationId: rohanGermanyApp.id,
-    universityName: "TU Munich",
-    courseName: "MSc Mechanical Engineering",
-    intake: "Spring 2026",
-    status: "ACCEPTED",
-  });
+  const rohanGermanyOffer = await recordOffer(
+    {
+      studentId: rohan.id,
+      countryId: germany.id,
+      applicationId: rohanGermanyApp.id,
+      universityName: "TU Munich",
+      courseName: "MSc Mechanical Engineering",
+      intake: "Spring 2026",
+      status: "ACCEPTED",
+    },
+    appsTeam2.id
+  );
 
   await confirmCountry(rohan.id, germany.id, counsellor2.id, "Prioritising Germany route; UK kept on hold.");
   const rohanVisaCase = await openVisaCase({
@@ -493,25 +514,31 @@ export async function seedDatabase() {
   ];
   const meeraOffers: { uni: string; offerId: string }[] = [];
   for (const entry of germanUnis) {
-    const option = await createStudyOption({
-      studentId: meera.id,
-      countryId: germany.id,
-      universityName: entry.uni,
-      courseName: "MSc Data Engineering",
-      intake: "Fall 2026",
-      assignedCounsellorId: counsellor.id,
-      assignedAppsUserId: appsTeam.id,
-    });
+    const option = await createStudyOption(
+      {
+        studentId: meera.id,
+        countryId: germany.id,
+        universityName: entry.uni,
+        courseName: "MSc Data Engineering",
+        intake: "Fall 2026",
+        assignedCounsellorId: counsellor.id,
+        assignedAppsUserId: appsTeam.id,
+      },
+      counsellor.id
+    );
     const app = await createApplication({ studyOptionId: option.id });
-    const offer = await recordOffer({
-      studentId: meera.id,
-      countryId: germany.id,
-      applicationId: app.id,
-      universityName: entry.uni,
-      courseName: "MSc Data Engineering",
-      intake: "Fall 2026",
-      status: entry.offerStatus,
-    });
+    const offer = await recordOffer(
+      {
+        studentId: meera.id,
+        countryId: germany.id,
+        applicationId: app.id,
+        universityName: entry.uni,
+        courseName: "MSc Data Engineering",
+        intake: "Fall 2026",
+        status: entry.offerStatus,
+      },
+      appsTeam.id
+    );
     meeraOffers.push({ uni: entry.uni, offerId: offer.id });
   }
 
@@ -579,16 +606,19 @@ export async function seedDatabase() {
     data: { studentId: kabir.id, staffId: counsellor2.id, assignedById: frontDesk.id, note: "Initial case manager assignment on conversion from enquiry." },
   });
 
-  const kabirExternalOffer = await recordOffer({
-    studentId: kabir.id,
-    countryId: germany.id,
-    universityName: "Universität Hamburg",
-    courseName: "MSc International Business",
-    intake: "Fall 2026",
-    status: "ACCEPTED",
-    isExternal: true,
-    notes: "Offer obtained independently before approaching Student360; no internal study option/application on file.",
-  });
+  const kabirExternalOffer = await recordOffer(
+    {
+      studentId: kabir.id,
+      countryId: germany.id,
+      universityName: "Universität Hamburg",
+      courseName: "MSc International Business",
+      intake: "Fall 2026",
+      status: "ACCEPTED",
+      isExternal: true,
+      notes: "Offer obtained independently before approaching Student360; no internal study option/application on file.",
+    },
+    visaTeam2.id
+  );
   const kabirVisaCase = await openVisaCase({
     studentId: kabir.id,
     countryId: germany.id,
@@ -651,45 +681,57 @@ export async function seedDatabase() {
     data: { studentId: priya.id, staffId: counsellor.id, assignedById: frontDesk.id, note: "Initial case manager assignment on conversion from enquiry." },
   });
 
-  const priyaGermanyOption = await createStudyOption({
-    studentId: priya.id,
-    countryId: germany.id,
-    universityName: "Karlsruhe Institute of Technology",
-    courseName: "MSc Physics",
-    intake: "Fall 2026",
-    assignedCounsellorId: counsellor.id,
-    assignedAppsUserId: appsTeam.id,
-  });
-  const priyaFranceOption = await createStudyOption({
-    studentId: priya.id,
-    countryId: france.id,
-    universityName: "Sorbonne University",
-    courseName: "MSc Physics",
-    intake: "Fall 2026",
-    assignedCounsellorId: counsellor.id,
-    assignedAppsUserId: appsTeam.id,
-  });
+  const priyaGermanyOption = await createStudyOption(
+    {
+      studentId: priya.id,
+      countryId: germany.id,
+      universityName: "Karlsruhe Institute of Technology",
+      courseName: "MSc Physics",
+      intake: "Fall 2026",
+      assignedCounsellorId: counsellor.id,
+      assignedAppsUserId: appsTeam.id,
+    },
+    counsellor.id
+  );
+  const priyaFranceOption = await createStudyOption(
+    {
+      studentId: priya.id,
+      countryId: france.id,
+      universityName: "Sorbonne University",
+      courseName: "MSc Physics",
+      intake: "Fall 2026",
+      assignedCounsellorId: counsellor.id,
+      assignedAppsUserId: appsTeam.id,
+    },
+    counsellor.id
+  );
 
   const priyaGermanyApp = await createApplication({ studyOptionId: priyaGermanyOption.id });
-  const priyaGermanyOffer = await recordOffer({
-    studentId: priya.id,
-    countryId: germany.id,
-    applicationId: priyaGermanyApp.id,
-    universityName: "Karlsruhe Institute of Technology",
-    courseName: "MSc Physics",
-    intake: "Fall 2026",
-    status: "ACCEPTED",
-  });
+  const priyaGermanyOffer = await recordOffer(
+    {
+      studentId: priya.id,
+      countryId: germany.id,
+      applicationId: priyaGermanyApp.id,
+      universityName: "Karlsruhe Institute of Technology",
+      courseName: "MSc Physics",
+      intake: "Fall 2026",
+      status: "ACCEPTED",
+    },
+    appsTeam.id
+  );
   const priyaFranceApp = await createApplication({ studyOptionId: priyaFranceOption.id });
-  const priyaFranceOffer = await recordOffer({
-    studentId: priya.id,
-    countryId: france.id,
-    applicationId: priyaFranceApp.id,
-    universityName: "Sorbonne University",
-    courseName: "MSc Physics",
-    intake: "Fall 2026",
-    status: "ACCEPTED",
-  });
+  const priyaFranceOffer = await recordOffer(
+    {
+      studentId: priya.id,
+      countryId: france.id,
+      applicationId: priyaFranceApp.id,
+      universityName: "Sorbonne University",
+      courseName: "MSc Physics",
+      intake: "Fall 2026",
+      status: "ACCEPTED",
+    },
+    appsTeam.id
+  );
 
   await confirmCountry(priya.id, germany.id, counsellor.id, "Confirming Germany route.");
   await confirmCountry(priya.id, france.id, counsellor.id, "Confirming France route in parallel.");
@@ -775,26 +817,26 @@ export async function seedDatabase() {
 
   console.log("Seeding work items across departments/staff...");
   const wi1 = await createWorkItem({ title: "Verify passport copy", department: "APPLICATIONS", studentId: ananya.id, studyOptionId: ananyaGermanyOption.id, createdById: counsellor2.id, priority: "HIGH" });
-  await assignWorkItem(wi1.id, appsTeam.id);
-  await updateWorkItemStatus(wi1.id, "DONE");
+  await assignWorkItem(wi1.id, appsTeam.id, counsellor2.id);
+  await updateWorkItemStatus(wi1.id, "DONE", appsTeam.id);
 
   const wi2 = await createWorkItem({ title: "Draft SOP for TU Munich application", department: "APPLICATIONS", studentId: rohan.id, studyOptionId: rohanGermanyOption.id, createdById: counsellor2.id, priority: "MEDIUM" });
-  await assignWorkItem(wi2.id, appsTeam2.id);
-  await updateWorkItemStatus(wi2.id, "IN_PROGRESS");
+  await assignWorkItem(wi2.id, appsTeam2.id, counsellor2.id);
+  await updateWorkItemStatus(wi2.id, "IN_PROGRESS", appsTeam2.id);
 
   const wi3 = await createWorkItem({ title: "Book biometrics appointment", department: "VISA", studentId: meera.id, visaCaseId: meeraVisaCase.id, createdById: manager.id, priority: "HIGH" });
-  await assignWorkItem(wi3.id, visaTeam.id);
-  await updateWorkItemStatus(wi3.id, "BLOCKED");
+  await assignWorkItem(wi3.id, visaTeam.id, manager.id);
+  await updateWorkItemStatus(wi3.id, "BLOCKED", visaTeam.id);
 
   await createWorkItem({ title: "Chase blocked account confirmation letter", department: "VISA", studentId: kabir.id, visaCaseId: kabirVisaCase.id, createdById: manager.id, priority: "URGENT" });
 
   const wi5 = await createWorkItem({ title: "Collect updated bank statement", department: "COUNSELLING", studentId: priya.id, createdById: manager.id, priority: "LOW" });
-  await assignWorkItem(wi5.id, counsellor.id);
-  await updateWorkItemStatus(wi5.id, "NOT_STARTED");
+  await assignWorkItem(wi5.id, counsellor.id, manager.id);
+  await updateWorkItemStatus(wi5.id, "NOT_STARTED", counsellor.id);
 
   const wi6 = await createWorkItem({ title: "Follow up on CAS issuance", department: "VISA", studentId: rohan.id, visaCaseId: rohanUkVisaCase.id, createdById: manager.id, priority: "MEDIUM" });
-  await assignWorkItem(wi6.id, visaTeam2.id);
-  await updateWorkItemStatus(wi6.id, "IN_PROGRESS");
+  await assignWorkItem(wi6.id, visaTeam2.id, manager.id);
+  await updateWorkItemStatus(wi6.id, "IN_PROGRESS", visaTeam2.id);
 
   console.log("Seeding documents...");
   const passportDoc = await addDocument({

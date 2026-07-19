@@ -6,19 +6,19 @@ import type { WorkItemDepartment, WorkItemPriority, WorkItemStatus } from "@pris
 import { revalidatePath } from "next/cache";
 
 export async function assignWorkItemAction(formData: FormData) {
-  await requireRole("COUNSELLOR", "MANAGER");
+  const session = await requireRole("COUNSELLOR", "MANAGER");
   const workItemId = String(formData.get("workItemId"));
   const assignedToId = String(formData.get("assignedToId"));
-  await assignWorkItem(workItemId, assignedToId);
+  await assignWorkItem(workItemId, assignedToId, session.id);
   revalidatePath("/work-items");
   revalidatePath("/manager/workload");
 }
 
 export async function updateWorkItemStatusAction(formData: FormData) {
-  await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
+  const session = await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
   const workItemId = String(formData.get("workItemId"));
   const status = String(formData.get("status")) as WorkItemStatus;
-  await updateWorkItemStatus(workItemId, status);
+  await updateWorkItemStatus(workItemId, status, session.id);
   revalidatePath("/work-items");
   revalidatePath("/manager/workload");
 }

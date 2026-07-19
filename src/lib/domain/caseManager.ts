@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { logActivity } from "@/lib/domain/audit";
 
 export async function reassignCaseManager(
   studentId: string,
@@ -48,6 +49,14 @@ export async function reassignCaseManager(
           note ? ` Reason: ${note}` : ""
         }`,
       },
+    });
+
+    await logActivity(tx, {
+      studentId,
+      actorId: byUserId,
+      action: `Reassigned case manager from ${previous?.name ?? "unassigned"} to ${next.name}`,
+      entityType: "Student",
+      entityId: studentId,
     });
 
     return tx.student.findUniqueOrThrow({ where: { id: studentId } });

@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import type { DocumentType } from "@prisma/client";
+import { logActivity } from "@/lib/domain/audit";
 
 export async function addDocument(data: {
   studentId: string;
@@ -10,29 +11,49 @@ export async function addDocument(data: {
   uploadedById: string;
   linkTo?: { studyOptionId?: string; visaCaseId?: string; workItemId?: string };
 }) {
-  const document = await prisma.document.create({
-    data: {
-      studentId: data.studentId,
-      type: data.type,
-      label: data.label,
-      fileUrl: data.fileUrl,
-      expiryDate: data.expiryDate,
-      uploadedById: data.uploadedById,
-    },
-  });
-
-  if (data.linkTo) {
-    await prisma.documentLink.create({
-      data: { documentId: document.id, ...data.linkTo },
+  return prisma.$transaction(async (tx) => {
+    const document = await tx.document.create({
+      data: {
+        studentId: data.studentId,
+        type: data.type,
+        label: data.label,
+        fileUrl: data.fileUrl,
+        expiryDate: data.expiryDate,
+        uploadedById: data.uploadedById,
+      },
     });
-  }
 
-  return document;
+    if (data.linkTo) {
+      await tx.documentLink.create({
+        data: { documentId: document.id, ...data.linkTo },
+      });
+    }
+
+    await logActivity(tx, {
+      studentId: data.studentId,
+      actorId: data.uploadedById,
+      action: `Uploaded document: ${data.label}`,
+      entityType: "Document",
+      entityId: document.id,
+    });
+
+    return document;
+  });
 }
 
 export async function verifyDocument(documentId: string, verifiedById: string) {
-  return prisma.document.update({
-    where: { id: documentId },
-    data: { verified: true, verifiedById, verifiedAt: new Date() },
+  return prisma.$transaction(async (tx) => {
+    const document = await tx.document.update({
+      where: { id: documentId },
+      data: { verified: true, verifiedById, verifiedAt: new Date() },
+    });
+    await logActivity(tx, {
+      studentId: document.studentId,
+      actorId: verifiedById,
+      action: `Verified document: ${document.label}`,
+      entityType: "Document",
+      entityId: document.id,
+    });
+    return document;
   });
 }
