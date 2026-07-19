@@ -5,6 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "vercel-build": "prisma generate && prisma migrate deploy && next build",
+    "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx prisma/seed.ts"
@@ -31,7 +33,6 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.2.10",
-    "playwright": "^1.61.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.1",
     "typescript": "^5"
