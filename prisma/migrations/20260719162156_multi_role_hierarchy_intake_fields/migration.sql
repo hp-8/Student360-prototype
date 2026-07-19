@@ -12,6 +12,11 @@
 ALTER TYPE "OfferStatus" ADD VALUE 'ACCEPTED';
 
 -- AlterTable
+-- NOTE: this is a prototype database with only seed data. The two NOT NULL
+-- columns below get a temporary default so this applies cleanly even if the
+-- table already has rows from an earlier seed; the app immediately reseeds
+-- (truncate + repopulate) after deploy, so the placeholder values here never
+-- surface to a real user.
 ALTER TABLE "Lead" DROP COLUMN "educationSnapshot",
 ADD COLUMN     "additionalNotes" TEXT,
 ADD COLUMN     "fatherName" TEXT,
@@ -19,9 +24,12 @@ ADD COLUMN     "ieltsAttempted" BOOLEAN NOT NULL DEFAULT false,
 ADD COLUMN     "ieltsScore" TEXT,
 ADD COLUMN     "intendedCountryId" TEXT,
 ADD COLUMN     "motherName" TEXT,
-ADD COLUMN     "percentageReceived" DOUBLE PRECISION NOT NULL,
-ADD COLUMN     "schoolName" TEXT NOT NULL,
+ADD COLUMN     "percentageReceived" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN     "schoolName" TEXT NOT NULL DEFAULT '',
 ADD COLUMN     "universityAttended" TEXT;
+
+ALTER TABLE "Lead" ALTER COLUMN "percentageReceived" DROP DEFAULT;
+ALTER TABLE "Lead" ALTER COLUMN "schoolName" DROP DEFAULT;
 
 -- AlterTable
 ALTER TABLE "Student" DROP COLUMN "educationSnapshot",
@@ -38,7 +46,7 @@ ADD COLUMN     "universityAttended" TEXT;
 -- AlterTable
 ALTER TABLE "User" DROP COLUMN "role",
 ADD COLUMN     "managerId" TEXT,
-ADD COLUMN     "roles" "Role"[];
+ADD COLUMN     "roles" "Role"[] NOT NULL DEFAULT ARRAY[]::"Role"[];
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
