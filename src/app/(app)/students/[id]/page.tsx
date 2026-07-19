@@ -1,0 +1,488 @@
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { requireRole } from "@/lib/auth/session";
+import { prisma } from "@/lib/prisma";
+import {
+  Card,
+  SectionTitle,
+  Badge,
+  EmptyState,
+  Field,
+  inputClass,
+  Button,
+} from "@/components/ui";
+import { statusColor, humanize } from "@/lib/statusColors";
+import {
+  createStudyOptionAction,
+  confirmCountryAction,
+  reassignCaseManagerAction,
+  addNoteAction,
+  addDocumentAction,
+  verifyDocumentAction,
+} from "./actions";
+
+export default async function StudentDetailPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const session = await requireRole(
+    "COUNSELLOR",
+    "APPLICATIONS_TEAM",
+    "VISA_TEAM",
+    "MANAGER"
+  );
+  const { id } = await params;
+
+  const student = await prisma.student.findUnique({
+    where: { id },
+    include: {
+      branch: true,
+      currentCaseManager: true,
+      caseAssignments: {
+        include: { staff: true, assignedBy: true },
+        orderBy: { startedAt: "desc" },
+      },
+      studyOptions: {
+        include: {
+          country: true,
+          assignedCounsellor: true,
+          assignedAppsUser: true,
+          applications: { include: { offer: true } },
+          sopRecords: true,
+        },
+        orderBy: { createdAt: "desc" },
+      },
+      countryConfirmations: { include: { country: true }, orderBy: { confirmedAt: "desc" } },
+      offers: { include: { country: true }, orderBy: { createdAt: "desc" } },
+      visaCases: {
+        include: {
+          country: true,
+          visaRoute: true,
+          activeOffer: true,
+          assignedTo: true,
+          attempts: { orderBy: { attemptNumber: "desc" } },
+        },
+        orderBy: { openedAt: "desc" },
+      },
+      documents: {
+        include: { uploadedBy: true, verifiedBy: true },
+        orderBy: { uploadedAt: "desc" },
+      },
+      notes: { include: { author: true }, orderBy: { createdAt: "desc" } },
+      learningEnrollments: true,
+      testAttempts: { orderBy: { testDate: "desc" } },
+    },
+  });
+  if (!student) notFound();
+
+  const canEditStudyOptions = session.role === "COUNSELLOR" || session.role === "MANAGER";
+  const canManageCaseManager = session.role === "MANAGER";
+  const showVisaSection = session.role !== "APPLICATIONS_TEAM";
+
+  const [countries, counsellors] = await Promise.all([
+    prisma.country.findMany({ orderBy: { name: "asc" } }),
+    prisma.user.findMany({ where: { role: { in: ["COUNSELLOR"] }, active: true } }),
+  ]);
+
+  const confirmedCountryIds = new Set(
+    student.countryConfirmations.filter((c) => !c.releasedAt).map((c) => c.countryId)
+  );
+
+  return (
+    <div className="flex flex-col gap-6">
+      <Card className="p-5">
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-xl font-semibold text-slate-900">
+              {student.firstName} {student.lastName}
+            </h1>
+            <p className="text-sm text-slate-500 mt-1">
+              {student.branch.name} · Enquiry {student.enquiryDate.toLocaleDateString()}
+            </p>
+          </div>
+          <Badge color="blue">
+            Case manager: {student.currentCaseManager?.name ?? "Unassigned"}
+          </Badge>
+        </div>
+        <dl className="grid grid-cols-3 gap-4 mt-4 text-sm">
+          <div>
+            <dt className="text-slate-500">Phone</dt>
+            <dd>{student.phone}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Email</dt>
+            <dd>{student.email ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-slate-500">Guardian</dt>
+            <dd>
+              {student.guardianName
+                ? `${student.guardianName} (${student.guardianRelation ?? "—"}) · ${student.guardianPhone ?? "—"}`
+                : "—"}
+            </dd>
+          </div>
+          <div className="col-span-3">
+            <dt className="text-slate-500">Education snapshot</dt>
+            <dd>{student.educationSnapshot ?? "—"}</dd>
+          </div>
+        </dl>
+      </Card>
+
+      {canManageCaseManager && (
+        <Card className="p-5">
+          <SectionTitle>Case manager</SectionTitle>
+          <form action={reassignCaseManagerAction} className="flex items-end gap-3">
+            <input type="hidden" name="studentId" value={student.id} />
+            <Field label="Reassign to">
+              <select name="newStaffId" required className={inputClass}>
+                <option value="">Select counsellor</option>
+                {counsellors.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Reason">
+              <input name="note" className={inputClass} placeholder="e.g. Workload rebalancing" />
+            </Field>
+            <Button type="submit">Reassign</Button>
+          </form>
+          <div className="mt-4">
+            <p className="text-xs font-medium text-slate-500 mb-2">History</p>
+            <ul className="text-sm space-y-1">
+              {student.caseAssignments.map((ca) => (
+                <li key={ca.id} className="text-slate-600">
+                  {ca.staff.name} from {ca.startedAt.toLocaleDateString()}
+                  {ca.endedAt ? ` to ${ca.endedAt.toLocaleDateString()}` : " (active)"} ·
+                  assigned by {ca.assignedBy.name}
+                  {ca.note ? ` — ${ca.note}` : ""}
+                </li>
+              ))}
+            </ul>
+          </div>
+        </Card>
+      )}
+
+      <Card className="p-5">
+        <SectionTitle>Confirmed routes</SectionTitle>
+        {student.countryConfirmations.filter((c) => !c.releasedAt).length === 0 ? (
+          <EmptyState>No country route confirmed yet.</EmptyState>
+        ) : (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {student.countryConfirmations
+              .filter((c) => !c.releasedAt)
+              .map((c) => (
+                <Badge key={c.id} color="green">
+                  {c.country.name} · confirmed {c.confirmedAt.toLocaleDateString()}
+                </Badge>
+              ))}
+          </div>
+        )}
+        {canEditStudyOptions && (
+          <form action={confirmCountryAction} className="flex items-end gap-3">
+            <input type="hidden" name="studentId" value={student.id} />
+            <Field label="Confirm country/route">
+              <select name="countryId" required className={inputClass}>
+                <option value="">Select country</option>
+                {countries.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Note">
+              <input name="note" className={inputClass} placeholder="Optional" />
+            </Field>
+            <Button type="submit" variant="secondary">
+              Confirm
+            </Button>
+          </form>
+        )}
+      </Card>
+
+      <Card className="p-5">
+        <SectionTitle>Study options</SectionTitle>
+        {student.studyOptions.length === 0 ? (
+          <EmptyState>No study options yet.</EmptyState>
+        ) : (
+          <div className="flex flex-col gap-2 mb-4">
+            {student.studyOptions.map((so) => (
+              <Link
+                key={so.id}
+                href={`/study-options/${so.id}`}
+                className="flex items-center justify-between border border-slate-200 rounded-md px-4 py-3 hover:bg-slate-50"
+              >
+                <div>
+                  <p className="text-sm font-medium text-slate-900">
+                    {so.universityName} · {so.courseName}
+                  </p>
+                  <p className="text-xs text-slate-500">
+                    {so.country.name} · {so.intake}
+                    {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge color={statusColor(so.status)}>{humanize(so.status)}</Badge>
+                  <Badge color={so.applications.some((a) => a.offer) ? "green" : "slate"}>
+                    {so.applications.length} application{so.applications.length === 1 ? "" : "s"}
+                  </Badge>
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+        {canEditStudyOptions && (
+          <details className="mt-2">
+            <summary className="text-sm text-slate-600 cursor-pointer">
+              + Add a new study option
+            </summary>
+            <form
+              action={createStudyOptionAction}
+              className="grid grid-cols-2 gap-3 mt-3"
+            >
+              <input type="hidden" name="studentId" value={student.id} />
+              <Field label="Country">
+                <select name="countryId" required className={inputClass}>
+                  <option value="">Select country</option>
+                  {countries.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+              <Field label="Intake">
+                <input name="intake" required placeholder="e.g. Fall 2026" className={inputClass} />
+              </Field>
+              <Field label="University">
+                <input name="universityName" required className={inputClass} />
+              </Field>
+              <Field label="Course">
+                <input name="courseName" required className={inputClass} />
+              </Field>
+              <div className="col-span-2">
+                <Button type="submit" variant="secondary">
+                  Add study option
+                </Button>
+              </div>
+            </form>
+          </details>
+        )}
+      </Card>
+
+      {showVisaSection && (
+        <Card className="p-5">
+          <SectionTitle
+            action={
+              (session.role === "VISA_TEAM" || session.role === "MANAGER") && (
+                <Link
+                  href={`/visa/new?studentId=${student.id}`}
+                  className="text-sm text-slate-900 underline"
+                >
+                  Open visa case
+                </Link>
+              )
+            }
+          >
+            Visa cases
+          </SectionTitle>
+          {student.visaCases.length === 0 ? (
+            <EmptyState>No visa case opened yet.</EmptyState>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {student.visaCases.map((vc) => {
+                const latestAttempt = vc.attempts[0];
+                return (
+                  <Link
+                    key={vc.id}
+                    href={`/visa/${vc.id}`}
+                    className="flex items-center justify-between border border-slate-200 rounded-md px-4 py-3 hover:bg-slate-50"
+                  >
+                    <div>
+                      <p className="text-sm font-medium text-slate-900">
+                        {vc.country.name} · {vc.visaRoute.name}
+                      </p>
+                      <p className="text-xs text-slate-500">
+                        {vc.activeOffer
+                          ? `Active offer: ${vc.activeOffer.universityName}`
+                          : "No active offer set"}{" "}
+                        · assigned to {vc.assignedTo?.name ?? "unassigned"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {latestAttempt && (
+                        <Badge color={statusColor(latestAttempt.status)}>
+                          Attempt {latestAttempt.attemptNumber}: {humanize(latestAttempt.status)}
+                        </Badge>
+                      )}
+                      <Badge color={statusColor(vc.lifecycleStatus)}>
+                        {humanize(vc.lifecycleStatus)}
+                      </Badge>
+                    </div>
+                  </Link>
+                );
+              })}
+            </div>
+          )}
+        </Card>
+      )}
+
+      <Card className="p-5">
+        <SectionTitle>Documents</SectionTitle>
+        {student.documents.length === 0 ? (
+          <EmptyState>No documents uploaded.</EmptyState>
+        ) : (
+          <table className="w-full text-sm mb-4">
+            <thead>
+              <tr className="border-b border-slate-200 text-left text-slate-500">
+                <th className="py-2 font-medium">Label</th>
+                <th className="py-2 font-medium">Type</th>
+                <th className="py-2 font-medium">Expiry</th>
+                <th className="py-2 font-medium">Status</th>
+                <th className="py-2 font-medium"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {student.documents.map((d) => (
+                <tr key={d.id} className="border-b border-slate-100 last:border-0">
+                  <td className="py-2">{d.label}</td>
+                  <td className="py-2">{humanize(d.type)}</td>
+                  <td className="py-2">
+                    {d.expiryDate ? d.expiryDate.toLocaleDateString() : "—"}
+                  </td>
+                  <td className="py-2">
+                    {d.verified ? (
+                      <Badge color="green">Verified</Badge>
+                    ) : (
+                      <Badge color="amber">Unverified</Badge>
+                    )}
+                  </td>
+                  <td className="py-2 text-right">
+                    {!d.verified && (
+                      <form action={verifyDocumentAction}>
+                        <input type="hidden" name="studentId" value={student.id} />
+                        <input type="hidden" name="documentId" value={d.id} />
+                        <button className="text-slate-900 underline text-sm">
+                          Mark verified
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+        <details>
+          <summary className="text-sm text-slate-600 cursor-pointer">
+            + Add a document
+          </summary>
+          <form action={addDocumentAction} className="grid grid-cols-2 gap-3 mt-3">
+            <input type="hidden" name="studentId" value={student.id} />
+            <Field label="Label">
+              <input name="label" required className={inputClass} />
+            </Field>
+            <Field label="Type">
+              <select name="type" required className={inputClass}>
+                {[
+                  "PASSPORT",
+                  "IELTS_SCORE",
+                  "BANK_STATEMENT",
+                  "SOP",
+                  "OFFER_LETTER",
+                  "VISA_FORM",
+                  "ACADEMIC_TRANSCRIPT",
+                  "RECOMMENDATION_LETTER",
+                  "FINANCIAL_AFFIDAVIT",
+                  "VISA_APPOINTMENT_CONFIRMATION",
+                  "OTHER",
+                ].map((t) => (
+                  <option key={t} value={t}>
+                    {humanize(t)}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Expiry date (optional)">
+              <input type="date" name="expiryDate" className={inputClass} />
+            </Field>
+            <div className="flex items-end">
+              <Button type="submit" variant="secondary">
+                Add document
+              </Button>
+            </div>
+          </form>
+        </details>
+      </Card>
+
+      <Card className="p-5">
+        <SectionTitle>Learning services &amp; test attempts</SectionTitle>
+        <div className="grid grid-cols-2 gap-6">
+          <div>
+            <p className="text-xs font-medium text-slate-500 mb-2">Enrollments</p>
+            {student.learningEnrollments.length === 0 ? (
+              <EmptyState>None on file.</EmptyState>
+            ) : (
+              <ul className="text-sm space-y-1">
+                {student.learningEnrollments.map((e) => (
+                  <li key={e.id} className="flex justify-between">
+                    <span>{humanize(e.service)}</span>
+                    <Badge color={statusColor(e.status)}>{humanize(e.status)}</Badge>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div>
+            <p className="text-xs font-medium text-slate-500 mb-2">Test attempts</p>
+            {student.testAttempts.length === 0 ? (
+              <EmptyState>None on file.</EmptyState>
+            ) : (
+              <ul className="text-sm space-y-1">
+                {student.testAttempts.map((t) => (
+                  <li key={t.id}>
+                    {humanize(t.testType)}: {t.score} ({t.testDate.toLocaleDateString()})
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        </div>
+      </Card>
+
+      <Card className="p-5">
+        <SectionTitle>Notes</SectionTitle>
+        <form action={addNoteAction} className="flex gap-3 mb-4">
+          <input type="hidden" name="studentId" value={student.id} />
+          <input
+            name="body"
+            placeholder="Add a note..."
+            required
+            className={`${inputClass} flex-1`}
+          />
+          <Button type="submit" variant="secondary">
+            Add
+          </Button>
+        </form>
+        {student.notes.length === 0 ? (
+          <EmptyState>No notes yet.</EmptyState>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {student.notes.map((n) => (
+              <li key={n.id} className="text-sm border-l-2 border-slate-200 pl-3">
+                <p className="text-slate-800">{n.body}</p>
+                <p className="text-xs text-slate-400 mt-0.5">
+                  {n.author.name} · {n.createdAt.toLocaleString()}
+                  {n.category !== "GENERAL" ? ` · ${humanize(n.category)}` : ""}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Card>
+    </div>
+  );
+}

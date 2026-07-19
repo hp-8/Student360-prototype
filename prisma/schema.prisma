@@ -1,0 +1,618 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================================================================
+// ENUMS
+// =========================================================================
+
+enum Role {
+  FRONT_DESK
+  COUNSELLOR
+  APPLICATIONS_TEAM
+  VISA_TEAM
+  MANAGER
+  ADMINISTRATOR
+}
+
+enum LeadStatus {
+  OPEN
+  CONVERTED
+  LOST
+}
+
+enum StudyOptionStatus {
+  ACTIVE
+  ON_HOLD
+  WITHDRAWN
+  UNSUCCESSFUL
+  REJECTED
+}
+
+enum ApplicationStatus {
+  SUBMITTED
+  UNDER_REVIEW
+  DECIDED
+  WITHDRAWN
+}
+
+enum SopStatus {
+  NOT_STARTED
+  DRAFTING
+  REVIEW
+  FINAL
+}
+
+enum OfferStatus {
+  CONDITIONAL
+  UNCONDITIONAL
+  REJECTED
+  WITHDRAWN
+  DEFERRED
+}
+
+enum VisaCaseLifecycleStatus {
+  OPEN
+  ON_HOLD
+  CLOSED
+}
+
+enum VisaCaseCloseReason {
+  PIVOTED
+  PLAN_ENDED
+}
+
+enum VisaAttemptStatus {
+  DOCUMENTS_PENDING
+  READY_TO_FILE
+  SUBMITTED
+  BIOMETRICS_PENDING
+  INTERVIEW_PENDING
+  ADDITIONAL_DOCUMENTS
+  DECISION_PENDING
+  APPROVED
+  REFUSED
+  WITHDRAWN
+}
+
+enum VisaEventType {
+  FILING
+  APPOINTMENT
+  BIOMETRICS
+  INTERVIEW
+  ADDITIONAL_DOCUMENTS_REQUESTED
+  APPROVAL
+  REFUSAL
+  WITHDRAWAL
+  NOTE
+}
+
+enum ChecklistItemSource {
+  BASE
+  OFFER_SPECIFIC
+}
+
+enum ChecklistItemStatus {
+  PENDING
+  RECEIVED
+  VERIFIED
+  WAIVED
+}
+
+enum WorkItemDepartment {
+  FRONT_DESK
+  COUNSELLING
+  APPLICATIONS
+  VISA
+  MANAGEMENT
+  ADMIN
+}
+
+enum WorkItemPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum WorkItemStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum DocumentType {
+  PASSPORT
+  IELTS_SCORE
+  BANK_STATEMENT
+  SOP
+  OFFER_LETTER
+  VISA_FORM
+  ACADEMIC_TRANSCRIPT
+  RECOMMENDATION_LETTER
+  FINANCIAL_AFFIDAVIT
+  VISA_APPOINTMENT_CONFIRMATION
+  OTHER
+}
+
+enum NoteCategory {
+  GENERAL
+  CASE_MANAGER_REASSIGNMENT
+  VISA_CASE_STATUS_CHANGE
+  COUNSELLING
+}
+
+enum LearningServiceType {
+  IELTS
+  GERMAN_CLASS
+  FRENCH_CLASS
+  SOP_ASSISTANCE
+  INTERVIEW_PREP
+}
+
+enum LearningEnrollmentStatus {
+  ENROLLED
+  NOT_ENROLLED
+  COMPLETED
+}
+
+enum TestType {
+  IELTS
+  TOEFL
+  PTE
+  TCF
+  GOETHE
+  OTHER
+}
+
+// =========================================================================
+// CONFIGURATION (Administrator scope)
+// =========================================================================
+
+model Branch {
+  id        String   @id @default(cuid())
+  name      String
+  city      String
+  createdAt DateTime @default(now())
+
+  users    User[]
+  leads    Lead[]
+  students Student[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  branchId     String?
+  active       Boolean  @default(true)
+  createdAt    DateTime @default(now())
+
+  branch Branch? @relation(fields: [branchId], references: [id])
+
+  leadsCreated             Lead[]                @relation("LeadCreatedBy")
+  studentsAsCaseManager    Student[]             @relation("CurrentCaseManager")
+  caseAssignments          CaseAssignment[]      @relation("CaseAssignmentStaff")
+  caseAssignmentsMade      CaseAssignment[]      @relation("CaseAssignmentBy")
+  studyOptionsAsCounsellor StudyOption[]         @relation("StudyOptionCounsellor")
+  studyOptionsAsAppsTeam   StudyOption[]         @relation("StudyOptionAppsUser")
+  visaCasesAssigned        VisaCase[]            @relation("VisaCaseAssignedTo")
+  visaCasesOpened          VisaCase[]            @relation("VisaCaseOpenedBy")
+  workItemsAssigned        WorkItem[]            @relation("WorkItemAssignedTo")
+  workItemsCreated         WorkItem[]            @relation("WorkItemCreatedBy")
+  notes                    Note[]                @relation("NoteAuthor")
+  documentsUploaded        Document[]            @relation("DocumentUploadedBy")
+  documentsVerified        Document[]            @relation("DocumentVerifiedBy")
+  visaEventsLogged         VisaEvent[]           @relation("VisaEventCreatedBy")
+  countryConfirmationsMade CountryConfirmation[] @relation("CountryConfirmationBy")
+}
+
+model Country {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  code      String   @unique
+  createdAt DateTime @default(now())
+
+  studyOptions         StudyOption[]
+  offers               Offer[]
+  visaRoutes           VisaRoute[]
+  visaCases            VisaCase[]
+  countryConfirmations CountryConfirmation[]
+}
+
+model VisaRoute {
+  id          String   @id @default(cuid())
+  countryId   String
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+
+  country              Country               @relation(fields: [countryId], references: [id])
+  requirementTemplates RequirementTemplate[]
+  visaCases            VisaCase[]
+}
+
+model RequirementTemplate {
+  id          String   @id @default(cuid())
+  visaRouteId String
+  version     Int
+  isActive    Boolean  @default(true)
+  items       Json
+  createdAt   DateTime @default(now())
+
+  visaRoute VisaRoute  @relation(fields: [visaRouteId], references: [id])
+  visaCases VisaCase[]
+
+  @@unique([visaRouteId, version])
+}
+
+// =========================================================================
+// LEADS / STUDENTS
+// =========================================================================
+
+model Lead {
+  id                 String     @id @default(cuid())
+  firstName          String
+  lastName           String
+  phone              String
+  email              String?
+  source             String?
+  branchId           String
+  enquiryDate        DateTime   @default(now())
+  educationSnapshot  String?
+  status             LeadStatus @default(OPEN)
+  lostReason         String?
+  createdById        String
+  convertedStudentId String?    @unique
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  branch           Branch   @relation(fields: [branchId], references: [id])
+  createdBy        User     @relation("LeadCreatedBy", fields: [createdById], references: [id])
+  convertedStudent Student? @relation("LeadConvertedStudent", fields: [convertedStudentId], references: [id])
+}
+
+model Student {
+  id                   String    @id @default(cuid())
+  firstName            String
+  lastName             String
+  dob                  DateTime?
+  phone                String
+  email                String?
+  address              String?
+  guardianName         String?
+  guardianPhone        String?
+  guardianRelation     String?
+  leadSource           String?
+  branchId             String
+  enquiryDate          DateTime  @default(now())
+  educationSnapshot    String?
+  consentNotes         String?
+  currentCaseManagerId String?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  branch             Branch @relation(fields: [branchId], references: [id])
+  currentCaseManager User?  @relation("CurrentCaseManager", fields: [currentCaseManagerId], references: [id])
+
+  originatingLead      Lead?                 @relation("LeadConvertedStudent")
+  caseAssignments      CaseAssignment[]
+  studyOptions         StudyOption[]
+  countryConfirmations CountryConfirmation[]
+  offers               Offer[]
+  visaCases            VisaCase[]
+  workItems            WorkItem[]
+  documents            Document[]
+  notes                Note[]
+  learningEnrollments  LearningEnrollment[]
+  testAttempts         TestAttempt[]
+}
+
+model CaseAssignment {
+  id           String    @id @default(cuid())
+  studentId    String
+  staffId      String
+  assignedById String
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  note         String?
+
+  student    Student @relation(fields: [studentId], references: [id])
+  staff      User    @relation("CaseAssignmentStaff", fields: [staffId], references: [id])
+  assignedBy User    @relation("CaseAssignmentBy", fields: [assignedById], references: [id])
+}
+
+// =========================================================================
+// STUDY OPTIONS / APPLICATIONS / OFFERS
+// =========================================================================
+
+model StudyOption {
+  id                   String            @id @default(cuid())
+  studentId            String
+  countryId            String
+  universityName       String
+  courseName           String
+  intake               String
+  status               StudyOptionStatus @default(ACTIVE)
+  assignedCounsellorId String?
+  assignedAppsUserId   String?
+  notes                String?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+
+  student            Student @relation(fields: [studentId], references: [id])
+  country            Country @relation(fields: [countryId], references: [id])
+  assignedCounsellor User?   @relation("StudyOptionCounsellor", fields: [assignedCounsellorId], references: [id])
+  assignedAppsUser   User?   @relation("StudyOptionAppsUser", fields: [assignedAppsUserId], references: [id])
+
+  applications  ApplicationRecord[]
+  sopRecords    SopRecord[]
+  workItems     WorkItem[]
+  documentLinks DocumentLink[]
+}
+
+model ApplicationRecord {
+  id            String            @id @default(cuid())
+  studyOptionId String
+  appliedDate   DateTime          @default(now())
+  status        ApplicationStatus @default(SUBMITTED)
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  studyOption StudyOption @relation(fields: [studyOptionId], references: [id])
+  offer       Offer?
+}
+
+model SopRecord {
+  id            String    @id @default(cuid())
+  studyOptionId String
+  status        SopStatus @default(NOT_STARTED)
+  content       String?
+  assignedToId  String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  studyOption StudyOption @relation(fields: [studyOptionId], references: [id])
+}
+
+model Offer {
+  id             String      @id @default(cuid())
+  studentId      String
+  countryId      String
+  applicationId  String?     @unique
+  universityName String
+  courseName     String
+  intake         String
+  status         OfferStatus @default(CONDITIONAL)
+  isExternal     Boolean     @default(false)
+  receivedDate   DateTime    @default(now())
+  conditions     String?
+  notes          String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  student     Student            @relation(fields: [studentId], references: [id])
+  country     Country            @relation(fields: [countryId], references: [id])
+  application ApplicationRecord? @relation(fields: [applicationId], references: [id])
+
+  visaCasesActiveFor VisaCase[] @relation("VisaCaseActiveOffer")
+}
+
+// =========================================================================
+// COUNTRY CONFIRMATION (reversible route confirmation)
+// =========================================================================
+
+model CountryConfirmation {
+  id            String    @id @default(cuid())
+  studentId     String
+  countryId     String
+  confirmedAt   DateTime  @default(now())
+  releasedAt    DateTime?
+  confirmedById String
+  note          String?
+
+  student     Student @relation(fields: [studentId], references: [id])
+  country     Country @relation(fields: [countryId], references: [id])
+  confirmedBy User    @relation("CountryConfirmationBy", fields: [confirmedById], references: [id])
+}
+
+// =========================================================================
+// VISA CASES / ATTEMPTS / EVENTS / CHECKLIST
+// =========================================================================
+
+model VisaCase {
+  id                    String                  @id @default(cuid())
+  studentId             String
+  countryId             String
+  visaRouteId           String
+  requirementTemplateId String
+  lifecycleStatus       VisaCaseLifecycleStatus @default(OPEN)
+  closeReason           VisaCaseCloseReason?
+  activeOfferId         String?
+  assignedToId          String?
+  openedById            String
+  openedAt              DateTime                @default(now())
+  closedAt              DateTime?
+  notes                 String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+
+  student             Student             @relation(fields: [studentId], references: [id])
+  country             Country             @relation(fields: [countryId], references: [id])
+  visaRoute           VisaRoute           @relation(fields: [visaRouteId], references: [id])
+  requirementTemplate RequirementTemplate @relation(fields: [requirementTemplateId], references: [id])
+  activeOffer         Offer?              @relation("VisaCaseActiveOffer", fields: [activeOfferId], references: [id])
+  assignedTo          User?               @relation("VisaCaseAssignedTo", fields: [assignedToId], references: [id])
+  openedBy            User                @relation("VisaCaseOpenedBy", fields: [openedById], references: [id])
+
+  attempts       VisaAttempt[]
+  checklistItems CaseChecklistItem[]
+  workItems      WorkItem[]
+  documentLinks  DocumentLink[]
+}
+
+model VisaAttempt {
+  id            String            @id @default(cuid())
+  visaCaseId    String
+  attemptNumber Int
+  status        VisaAttemptStatus @default(DOCUMENTS_PENDING)
+  startedAt     DateTime          @default(now())
+  decidedAt     DateTime?
+  notes         String?
+  createdAt     DateTime          @default(now())
+  updatedAt     DateTime          @updatedAt
+
+  visaCase VisaCase    @relation(fields: [visaCaseId], references: [id])
+  events   VisaEvent[]
+
+  @@unique([visaCaseId, attemptNumber])
+}
+
+model VisaEvent {
+  id            String        @id @default(cuid())
+  visaAttemptId String
+  type          VisaEventType
+  eventDate     DateTime      @default(now())
+  notes         String?
+  createdById   String
+  createdAt     DateTime      @default(now())
+
+  visaAttempt VisaAttempt @relation(fields: [visaAttemptId], references: [id])
+  createdBy   User        @relation("VisaEventCreatedBy", fields: [createdById], references: [id])
+}
+
+model CaseChecklistItem {
+  id              String              @id @default(cuid())
+  visaCaseId      String
+  source          ChecklistItemSource @default(BASE)
+  title           String
+  description     String?
+  required        Boolean             @default(true)
+  status          ChecklistItemStatus @default(PENDING)
+  addedForOfferId String?
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  visaCase VisaCase @relation(fields: [visaCaseId], references: [id])
+}
+
+// =========================================================================
+// WORK ITEMS
+// =========================================================================
+
+model WorkItem {
+  id            String             @id @default(cuid())
+  title         String
+  department    WorkItemDepartment
+  assignedToId  String?
+  studentId     String
+  studyOptionId String?
+  visaCaseId    String?
+  dueDate       DateTime?
+  priority      WorkItemPriority   @default(MEDIUM)
+  status        WorkItemStatus     @default(NOT_STARTED)
+  autoCreated   Boolean            @default(false)
+  createdById   String
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+
+  assignedTo  User?        @relation("WorkItemAssignedTo", fields: [assignedToId], references: [id])
+  createdBy   User         @relation("WorkItemCreatedBy", fields: [createdById], references: [id])
+  student     Student      @relation(fields: [studentId], references: [id])
+  studyOption StudyOption? @relation(fields: [studyOptionId], references: [id])
+  visaCase    VisaCase?    @relation(fields: [visaCaseId], references: [id])
+
+  documentLinks DocumentLink[]
+}
+
+// =========================================================================
+// DOCUMENTS
+// =========================================================================
+
+model Document {
+  id           String       @id @default(cuid())
+  studentId    String
+  type         DocumentType
+  label        String
+  fileUrl      String?
+  expiryDate   DateTime?
+  verified     Boolean      @default(false)
+  verifiedById String?
+  verifiedAt   DateTime?
+  uploadedById String
+  uploadedAt   DateTime     @default(now())
+
+  student    Student @relation(fields: [studentId], references: [id])
+  uploadedBy User    @relation("DocumentUploadedBy", fields: [uploadedById], references: [id])
+  verifiedBy User?   @relation("DocumentVerifiedBy", fields: [verifiedById], references: [id])
+
+  links DocumentLink[]
+}
+
+model DocumentLink {
+  id            String   @id @default(cuid())
+  documentId    String
+  studyOptionId String?
+  visaCaseId    String?
+  workItemId    String?
+  linkedAt      DateTime @default(now())
+
+  document    Document     @relation(fields: [documentId], references: [id])
+  studyOption StudyOption? @relation(fields: [studyOptionId], references: [id])
+  visaCase    VisaCase?    @relation(fields: [visaCaseId], references: [id])
+  workItem    WorkItem?    @relation(fields: [workItemId], references: [id])
+}
+
+// =========================================================================
+// NOTES
+// =========================================================================
+
+model Note {
+  id        String       @id @default(cuid())
+  studentId String
+  authorId  String
+  category  NoteCategory @default(GENERAL)
+  body      String
+  createdAt DateTime     @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+  author  User    @relation("NoteAuthor", fields: [authorId], references: [id])
+}
+
+// =========================================================================
+// LEARNING SERVICES (schema only, no dedicated UI)
+// =========================================================================
+
+model LearningEnrollment {
+  id          String                   @id @default(cuid())
+  studentId   String
+  service     LearningServiceType
+  status      LearningEnrollmentStatus @default(NOT_ENROLLED)
+  enrolledAt  DateTime?
+  completedAt DateTime?
+  notes       String?
+  createdAt   DateTime                 @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+model TestAttempt {
+  id        String   @id @default(cuid())
+  studentId String
+  testType  TestType
+  score     String
+  testDate  DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+
+  student Student @relation(fields: [studentId], references: [id])
+}
