@@ -84,18 +84,18 @@ export default async function ManagerDashboardPage() {
 
       <div className="grid grid-cols-3 gap-4">
         <Card className="p-5">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Total students</p>
-          <p className="text-3xl font-semibold text-slate-900 mt-1">{studentCount}</p>
+          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Total students</p>
+          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{studentCount}</p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Open visa cases</p>
-          <p className="text-3xl font-semibold text-slate-900 mt-1">
+          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Open visa cases</p>
+          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">
             {visaCases.filter((v) => v.lifecycleStatus === "OPEN").length}
           </p>
         </Card>
         <Card className="p-5">
-          <p className="text-xs text-slate-500 uppercase tracking-wide">Pending work items</p>
-          <p className="text-3xl font-semibold text-slate-900 mt-1">{pendingWorkItems}</p>
+          <p className="text-xs text-[var(--brass)] uppercase tracking-wide font-medium">Pending work items</p>
+          <p className="font-display text-3xl font-semibold text-[var(--navy-deep)] mt-1">{pendingWorkItems}</p>
         </Card>
       </div>
 

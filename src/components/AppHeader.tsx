@@ -7,18 +7,23 @@ export function AppHeader({ session }: { session: SessionUser }) {
   const navItems = NAV_BY_ROLE[session.role];
 
   return (
-    <header className="border-b border-slate-200 bg-white">
-      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-14">
-        <div className="flex items-center gap-6">
-          <Link href="/" className="font-semibold text-slate-900">
-            Student360
+    <header className="border-b border-[var(--paper-line)] bg-white/80 backdrop-blur-sm sticky top-0 z-10">
+      <div className="max-w-6xl mx-auto px-4 flex items-center justify-between h-16">
+        <div className="flex items-center gap-7">
+          <Link href="/" className="flex items-center gap-2.5 shrink-0">
+            <span className="flex items-center justify-center w-7 h-7 rounded-[7px] bg-[var(--navy)] text-white font-display text-sm font-semibold">
+              S
+            </span>
+            <span className="font-display font-semibold text-[var(--navy-deep)] tracking-tight">
+              Student360
+            </span>
           </Link>
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-5">
             {navItems.map((item) => (
               <Link
                 key={item.href}
                 href={item.href}
-                className="text-sm text-slate-600 hover:text-slate-900"
+                className="text-sm text-[var(--ink-soft)] hover:text-[var(--navy)] transition-colors"
               >
                 {item.label}
               </Link>
@@ -26,14 +31,14 @@ export function AppHeader({ session }: { session: SessionUser }) {
           </nav>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-sm text-slate-500">
+          <span className="text-sm text-[var(--ink-soft)] hidden sm:inline">
             {session.name}{" "}
-            <span className="text-slate-400">· {ROLE_LABEL[session.role]}</span>
+            <span className="text-[var(--brass)]">· {ROLE_LABEL[session.role]}</span>
           </span>
           <form action={logoutAction}>
             <button
               type="submit"
-              className="text-sm text-slate-600 hover:text-slate-900 border border-slate-300 rounded-md px-3 py-1"
+              className="text-sm text-[var(--ink-soft)] hover:text-[var(--navy)] border border-[var(--paper-line)] hover:border-[var(--navy)]/30 rounded-md px-3 py-1 transition-colors"
             >
               Log out
             </button>

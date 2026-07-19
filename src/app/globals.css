@@ -1,8 +1,22 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f8fafc;
-  --foreground: #0f172a;
+  --paper: #f6f3ec;
+  --paper-line: #e6ded0;
+  --ink: #1c2333;
+  --ink-soft: #4a5265;
+  --navy: #1c2d4a;
+  --navy-deep: #131d31;
+  --brass: #9c6b2f;
+  --brass-soft: #c99a4f;
+  --card: #ffffff;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --font-display: ui-serif, Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  --font-body:
+    ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
 }
 
 @theme inline {
@@ -13,13 +27,16 @@
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family:
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    "Segoe UI",
-    Roboto,
-    Helvetica,
-    Arial,
-    sans-serif;
+  font-family: var(--font-body);
+  background-image:
+    radial-gradient(circle at 100% 0%, rgba(28, 45, 74, 0.05), transparent 55%),
+    radial-gradient(circle at 0% 100%, rgba(156, 107, 47, 0.05), transparent 45%);
+  background-attachment: fixed;
+}
+
+h1,
+h2,
+.font-display {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
 }
