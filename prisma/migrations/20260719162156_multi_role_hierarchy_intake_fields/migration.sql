@@ -1,58 +1,56 @@
-/*
-  Warnings:
+-- This migration is written to be idempotent: an earlier version of it
+-- failed partway against a non-empty database, so every statement here is
+-- safe to re-run regardless of exactly how far that attempt got.
 
-  - You are about to drop the column `educationSnapshot` on the `Lead` table. All the data in the column will be lost.
-  - You are about to drop the column `educationSnapshot` on the `Student` table. All the data in the column will be lost.
-  - You are about to drop the column `role` on the `User` table. All the data in the column will be lost.
-  - Added the required column `percentageReceived` to the `Lead` table without a default value. This is not possible if the table is not empty.
-  - Added the required column `schoolName` to the `Lead` table without a default value. This is not possible if the table is not empty.
-
-*/
 -- AlterEnum
-ALTER TYPE "OfferStatus" ADD VALUE 'ACCEPTED';
+ALTER TYPE "OfferStatus" ADD VALUE IF NOT EXISTS 'ACCEPTED';
 
 -- AlterTable
--- NOTE: this is a prototype database with only seed data. The two NOT NULL
--- columns below get a temporary default so this applies cleanly even if the
--- table already has rows from an earlier seed; the app immediately reseeds
--- (truncate + repopulate) after deploy, so the placeholder values here never
--- surface to a real user.
-ALTER TABLE "Lead" DROP COLUMN "educationSnapshot",
-ADD COLUMN     "additionalNotes" TEXT,
-ADD COLUMN     "fatherName" TEXT,
-ADD COLUMN     "ieltsAttempted" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "ieltsScore" TEXT,
-ADD COLUMN     "intendedCountryId" TEXT,
-ADD COLUMN     "motherName" TEXT,
-ADD COLUMN     "percentageReceived" DOUBLE PRECISION NOT NULL DEFAULT 0,
-ADD COLUMN     "schoolName" TEXT NOT NULL DEFAULT '',
-ADD COLUMN     "universityAttended" TEXT;
+ALTER TABLE "Lead" DROP COLUMN IF EXISTS "educationSnapshot",
+ADD COLUMN IF NOT EXISTS "additionalNotes" TEXT,
+ADD COLUMN IF NOT EXISTS "fatherName" TEXT,
+ADD COLUMN IF NOT EXISTS "ieltsAttempted" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "ieltsScore" TEXT,
+ADD COLUMN IF NOT EXISTS "intendedCountryId" TEXT,
+ADD COLUMN IF NOT EXISTS "motherName" TEXT,
+ADD COLUMN IF NOT EXISTS "percentageReceived" DOUBLE PRECISION NOT NULL DEFAULT 0,
+ADD COLUMN IF NOT EXISTS "schoolName" TEXT NOT NULL DEFAULT '',
+ADD COLUMN IF NOT EXISTS "universityAttended" TEXT;
 
 ALTER TABLE "Lead" ALTER COLUMN "percentageReceived" DROP DEFAULT;
 ALTER TABLE "Lead" ALTER COLUMN "schoolName" DROP DEFAULT;
 
 -- AlterTable
-ALTER TABLE "Student" DROP COLUMN "educationSnapshot",
-ADD COLUMN     "additionalNotes" TEXT,
-ADD COLUMN     "fatherName" TEXT,
-ADD COLUMN     "ieltsAttempted" BOOLEAN NOT NULL DEFAULT false,
-ADD COLUMN     "ieltsScore" TEXT,
-ADD COLUMN     "intendedCountryId" TEXT,
-ADD COLUMN     "motherName" TEXT,
-ADD COLUMN     "percentageReceived" DOUBLE PRECISION,
-ADD COLUMN     "schoolName" TEXT,
-ADD COLUMN     "universityAttended" TEXT;
+ALTER TABLE "Student" DROP COLUMN IF EXISTS "educationSnapshot",
+ADD COLUMN IF NOT EXISTS "additionalNotes" TEXT,
+ADD COLUMN IF NOT EXISTS "fatherName" TEXT,
+ADD COLUMN IF NOT EXISTS "ieltsAttempted" BOOLEAN NOT NULL DEFAULT false,
+ADD COLUMN IF NOT EXISTS "ieltsScore" TEXT,
+ADD COLUMN IF NOT EXISTS "intendedCountryId" TEXT,
+ADD COLUMN IF NOT EXISTS "motherName" TEXT,
+ADD COLUMN IF NOT EXISTS "percentageReceived" DOUBLE PRECISION,
+ADD COLUMN IF NOT EXISTS "schoolName" TEXT,
+ADD COLUMN IF NOT EXISTS "universityAttended" TEXT;
 
 -- AlterTable
-ALTER TABLE "User" DROP COLUMN "role",
-ADD COLUMN     "managerId" TEXT,
-ADD COLUMN     "roles" "Role"[] NOT NULL DEFAULT ARRAY[]::"Role"[];
+ALTER TABLE "User" DROP COLUMN IF EXISTS "role",
+ADD COLUMN IF NOT EXISTS "managerId" TEXT,
+ADD COLUMN IF NOT EXISTS "roles" "Role"[] NOT NULL DEFAULT ARRAY[]::"Role"[];
 
 -- AddForeignKey
-ALTER TABLE "User" ADD CONSTRAINT "User_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "User" ADD CONSTRAINT "User_managerId_fkey" FOREIGN KEY ("managerId") REFERENCES "User"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Lead" ADD CONSTRAINT "Lead_intendedCountryId_fkey" FOREIGN KEY ("intendedCountryId") REFERENCES "Country"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Lead" ADD CONSTRAINT "Lead_intendedCountryId_fkey" FOREIGN KEY ("intendedCountryId") REFERENCES "Country"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- AddForeignKey
-ALTER TABLE "Student" ADD CONSTRAINT "Student_intendedCountryId_fkey" FOREIGN KEY ("intendedCountryId") REFERENCES "Country"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+DO $$ BEGIN
+  ALTER TABLE "Student" ADD CONSTRAINT "Student_intendedCountryId_fkey" FOREIGN KEY ("intendedCountryId") REFERENCES "Country"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
