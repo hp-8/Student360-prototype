@@ -23,6 +23,10 @@ export type TimelineEntry = {
   // For a trunk entry where side branches rejoin (e.g. country confirmed),
   // the laneKeys of the branches merging back in here.
   mergesLaneKeys?: string[];
+  // The underlying study option's status, carried on its "study"/"offer"
+  // entries so a branch that never merges can still be read as "withdrawn/
+  // rejected" (a real dead end) versus "still active, just not decided yet."
+  studyOptionStatus?: string;
 };
 
 export type LanedTimelineEntry = TimelineEntry & { lane: number; mergesLanes?: number[] };
@@ -35,6 +39,7 @@ type TimelineStudent = {
     countryId: string;
     universityName: string;
     courseName: string;
+    status: string;
     createdAt: Date;
     intakeCatalog: { name: string; applicationDeadline: Date | null } | null;
     applications: {
@@ -54,7 +59,7 @@ type TimelineStudent = {
     openedAt: Date;
     closedAt: Date | null;
     closeReason: string | null;
-    activeOffer: { application: { studyOptionId: string } | null } | null;
+    activeOffer: { universityName: string; application: { studyOptionId: string } | null } | null;
     attempts: {
       attemptNumber: number;
       startedAt: Date;
@@ -94,6 +99,7 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
       kind: "study",
       href: `/study-options/${so.id}`,
       laneKey: so.id,
+      studyOptionStatus: so.status,
     });
     for (const app of so.applications) {
       if (app.offer) {
@@ -104,6 +110,7 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
           kind: "offer",
           href: `/study-options/${so.id}`,
           laneKey: so.id,
+          studyOptionStatus: so.status,
         });
       }
     }
@@ -150,7 +157,9 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
     entries.push({
       date: vc.openedAt,
       label: `Visa application started — ${vc.country.name}`,
-      description: vc.visaRoute.name,
+      description: pursuedStudyOptionId
+        ? `${vc.visaRoute.name} · pursuing ${vc.activeOffer!.universityName}`
+        : vc.visaRoute.name,
       kind: "visa_case",
       href: vcHref,
       mergesLaneKeys: pursuedStudyOptionId ? [pursuedStudyOptionId] : undefined,
