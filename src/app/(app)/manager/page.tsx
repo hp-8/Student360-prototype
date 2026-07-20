@@ -1,7 +1,14 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge } from "@/components/ui";
 import { computeStudentStage, stageColor, type StudentStage } from "@/lib/domain/stage";
+
+const STAGE_FOR_OUTCOME: Record<string, StudentStage | undefined> = {
+  APPROVED: "Visa Approved",
+  REFUSED: "Visa Refused",
+  IN_PROGRESS: "Visa In Progress",
+};
 
 const STAGE_ORDER: StudentStage[] = [
   "New",
@@ -69,33 +76,40 @@ export default async function ManagerDashboardPage() {
       />
 
       <div className="grid grid-cols-3 gap-4">
-        <Card className="p-5">
-          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Total students</p>
-          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{students.length}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Open visa cases</p>
-          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{visaCaseCount}</p>
-        </Card>
-        <Card className="p-5">
-          <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Pending work items</p>
-          <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{pendingWorkItems}</p>
-        </Card>
+        <Link href="/manager/students">
+          <Card className="p-5 hover:border-[var(--brass-soft)] transition-colors">
+            <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Total students</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{students.length}</p>
+          </Card>
+        </Link>
+        <Link href="/manager/workload">
+          <Card className="p-5 hover:border-[var(--brass-soft)] transition-colors">
+            <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Open visa cases</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{visaCaseCount}</p>
+          </Card>
+        </Link>
+        <Link href="/work-items?filter=assigned">
+          <Card className="p-5 hover:border-[var(--brass-soft)] transition-colors">
+            <p className="font-mono text-[0.6875rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">Pending work items</p>
+            <p className="font-mono text-3xl font-semibold text-[var(--navy-deep)] mt-1">{pendingWorkItems}</p>
+          </Card>
+        </Link>
       </div>
 
       <Card className="p-5">
         <SectionTitle>Students by stage</SectionTitle>
         <div className="grid grid-cols-4 gap-3">
           {STAGE_ORDER.map((stage) => (
-            <div
+            <Link
               key={stage}
-              className="border border-[var(--paper-line)] rounded-md px-3 py-2.5 flex flex-col gap-1"
+              href={`/manager/students?stage=${encodeURIComponent(stage)}`}
+              className="border border-[var(--paper-line)] rounded-md px-3 py-2.5 flex flex-col gap-1 hover:border-[var(--brass-soft)] transition-colors"
             >
               <Badge color={stageColor(stage)}>{stage}</Badge>
               <span className="font-mono text-2xl font-semibold text-[var(--navy-deep)]">
                 {stageCounts.get(stage) ?? 0}
               </span>
-            </div>
+            </Link>
           ))}
         </div>
       </Card>
@@ -104,10 +118,19 @@ export default async function ManagerDashboardPage() {
         <Card className="p-5">
           <SectionTitle>Visa outcomes (case level)</SectionTitle>
           <div className="flex flex-wrap gap-2">
-            <Badge color="green">Approved: {outcomeCounts.APPROVED}</Badge>
-            <Badge color="red">Refused: {outcomeCounts.REFUSED}</Badge>
+            {(["APPROVED", "REFUSED", "IN_PROGRESS"] as const).map((key) => {
+              const label = key === "IN_PROGRESS" ? "In progress" : key === "APPROVED" ? "Approved" : "Refused";
+              const color = key === "APPROVED" ? "green" : key === "REFUSED" ? "red" : "amber";
+              const targetStage = STAGE_FOR_OUTCOME[key];
+              return (
+                <Link key={key} href={`/manager/students?stage=${encodeURIComponent(targetStage!)}`}>
+                  <Badge color={color}>
+                    {label}: {outcomeCounts[key]}
+                  </Badge>
+                </Link>
+              );
+            })}
             <Badge color="slate">Withdrawn: {outcomeCounts.WITHDRAWN}</Badge>
-            <Badge color="amber">In progress: {outcomeCounts.IN_PROGRESS}</Badge>
           </div>
         </Card>
 
@@ -118,9 +141,11 @@ export default async function ManagerDashboardPage() {
           ) : (
             <div className="flex flex-wrap gap-2">
               {Object.entries(studentsByCountry).map(([country, count]) => (
-                <Badge key={country} color="blue">
-                  {country}: {count}
-                </Badge>
+                <Link key={country} href={`/manager/students?country=${encodeURIComponent(country)}`}>
+                  <Badge color="blue">
+                    {country}: {count}
+                  </Badge>
+                </Link>
               ))}
             </div>
           )}

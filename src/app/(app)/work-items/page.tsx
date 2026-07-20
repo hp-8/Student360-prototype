@@ -9,14 +9,48 @@ import { staffName, studentName } from "@/lib/displayName";
 import { computeQueueCounts } from "@/lib/domain/workQueue";
 import { QueueTiles } from "@/components/QueueTiles";
 
-export default async function WorkItemsPage() {
-  const session = await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
+type WorkItemsFilter = "assigned" | "overdue" | "blocked" | "completed";
 
-  const myItems = await prisma.workItem.findMany({
+const FILTER_LABEL: Record<WorkItemsFilter, string> = {
+  assigned: "Open",
+  overdue: "Overdue",
+  blocked: "Blocked",
+  completed: "Completed",
+};
+
+export default async function WorkItemsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ filter?: string; department?: string; studentId?: string; unassigned?: string }>;
+}) {
+  const session = await requireRole("COUNSELLOR", "APPLICATIONS_TEAM", "VISA_TEAM", "MANAGER");
+  const { filter, department, studentId, unassigned } = await searchParams;
+
+  const allMyItems = await prisma.workItem.findMany({
     where: session.role === "MANAGER" ? {} : { assignedToId: session.id },
     include: { student: true, assignedTo: true },
     orderBy: [{ status: "asc" }, { dueDate: "asc" }],
   });
+
+  const queueCounts = computeQueueCounts(allMyItems);
+
+  const now = new Date();
+  let myItems = allMyItems;
+  if (department) myItems = myItems.filter((i) => i.department === department);
+  if (studentId) myItems = myItems.filter((i) => i.studentId === studentId);
+  if (unassigned === "true") myItems = myItems.filter((i) => !i.assignedToId && i.status !== "DONE");
+  if (filter === "overdue") {
+    myItems = myItems.filter((i) => i.status !== "DONE" && i.dueDate && i.dueDate < now);
+  } else if (filter === "blocked") {
+    myItems = myItems.filter((i) => i.status === "BLOCKED");
+  } else if (filter === "completed") {
+    myItems = myItems.filter((i) => i.status === "DONE");
+  } else if (filter === "assigned") {
+    myItems = myItems.filter((i) => i.status !== "DONE");
+  }
+
+  const filteredStudentName = studentId ? myItems[0]?.student ?? allMyItems.find((i) => i.studentId === studentId)?.student : null;
+  const hasActiveFilter = Boolean(filter || department || studentId || unassigned);
 
   const unassignedForMyStudents =
     session.role === "COUNSELLOR"
@@ -40,7 +74,6 @@ export default async function WorkItemsPage() {
   ]);
 
   const canAssign = session.role === "COUNSELLOR" || session.role === "MANAGER";
-  const queueCounts = computeQueueCounts(myItems);
 
   return (
     <div className="flex flex-col gap-6">
@@ -55,8 +88,23 @@ export default async function WorkItemsPage() {
 
       <Card className="p-5">
         <SectionTitle>{session.role === "MANAGER" ? "Org-wide queue" : "My queue"}</SectionTitle>
-        <QueueTiles counts={queueCounts} />
+        <QueueTiles counts={queueCounts} baseHref="/work-items" />
       </Card>
+
+      {hasActiveFilter && (
+        <Card className="p-3 flex items-center justify-between bg-[var(--paper)]">
+          <p className="text-sm text-[var(--ink-soft)]">
+            Filtered
+            {filter ? ` · ${FILTER_LABEL[filter as WorkItemsFilter] ?? filter}` : ""}
+            {unassigned === "true" ? " · Unassigned only" : ""}
+            {department ? ` · ${humanize(department)}` : ""}
+            {filteredStudentName ? ` · ${studentName(filteredStudentName)}` : ""}
+          </p>
+          <Link href="/work-items" className="text-sm text-[var(--navy)] underline">
+            Clear filter
+          </Link>
+        </Card>
+      )}
 
       {unassignedForMyStudents.length > 0 && (
         <Card className="p-5 border-[var(--status-amber-fg)]/30 bg-[var(--status-amber-bg)]">

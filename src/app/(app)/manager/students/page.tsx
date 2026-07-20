@@ -5,8 +5,13 @@ import { PageHeader, Card, Badge, EmptyState } from "@/components/ui";
 import { staffName, studentName } from "@/lib/displayName";
 import { computeStudentStage, stageColor } from "@/lib/domain/stage";
 
-export default async function ManagerStudentsPage() {
+export default async function ManagerStudentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ stage?: string; country?: string }>;
+}) {
   await requireRole("MANAGER");
+  const { stage: stageFilter, country: countryFilter } = await searchParams;
 
   const students = await prisma.student.findMany({
     include: {
@@ -26,12 +31,16 @@ export default async function ManagerStudentsPage() {
     orderBy: { createdAt: "desc" },
   });
 
-  const rows = students.map((s) => {
+  const allRows = students.map((s) => {
     const stage = computeStudentStage(s);
     const activeConfirmation = s.countryConfirmations.find((c) => !c.releasedAt);
     const destination = activeConfirmation?.country.name ?? s.visaCases[0]?.country.name ?? null;
     return { student: s, stage, destination };
   });
+
+  const rows = allRows
+    .filter((r) => !stageFilter || r.stage === stageFilter)
+    .filter((r) => !countryFilter || r.destination === countryFilter);
 
   return (
     <div>
@@ -39,9 +48,33 @@ export default async function ManagerStudentsPage() {
         title="All students"
         description="Every student across every branch and department, with their current pipeline stage."
       />
+
+      {(stageFilter || countryFilter) && (
+        <Card className="p-3 mb-4 flex items-center justify-between bg-[var(--paper)]">
+          <p className="text-sm text-[var(--ink-soft)]">
+            Filtered
+            {stageFilter ? (
+              <>
+                {" "}
+                · Stage: <span className="font-medium text-[var(--ink)]">{stageFilter}</span>
+              </>
+            ) : null}
+            {countryFilter ? (
+              <>
+                {" "}
+                · Destination: <span className="font-medium text-[var(--ink)]">{countryFilter}</span>
+              </>
+            ) : null}
+          </p>
+          <Link href="/manager/students" className="text-sm text-[var(--navy)] underline">
+            Clear filter
+          </Link>
+        </Card>
+      )}
+
       <Card>
         {rows.length === 0 ? (
-          <EmptyState>No students yet.</EmptyState>
+          <EmptyState>No students match this filter.</EmptyState>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -63,13 +96,23 @@ export default async function ManagerStudentsPage() {
                     </Link>
                   </td>
                   <td className="px-4 py-2.5">
-                    <Badge color={stageColor(stage)}>{stage}</Badge>
+                    <Link href={`/manager/students?stage=${encodeURIComponent(stage)}`}>
+                      <Badge color={stageColor(stage)}>{stage}</Badge>
+                    </Link>
                   </td>
                   <td className="px-4 py-2.5 text-[var(--ink-soft)]">
                     {s.currentCaseManager ? staffName(s.currentCaseManager) : "Unassigned"}
                   </td>
                   <td className="px-4 py-2.5 text-[var(--ink-soft)]">{s.branch.name}</td>
-                  <td className="px-4 py-2.5 text-[var(--ink-soft)]">{destination ?? "—"}</td>
+                  <td className="px-4 py-2.5 text-[var(--ink-soft)]">
+                    {destination ? (
+                      <Link href={`/manager/students?country=${encodeURIComponent(destination)}`} className="hover:underline">
+                        {destination}
+                      </Link>
+                    ) : (
+                      "—"
+                    )}
+                  </td>
                   <td className="px-4 py-2.5 text-[var(--ink-soft)]">{s.studyOptions.length}</td>
                 </tr>
               ))}

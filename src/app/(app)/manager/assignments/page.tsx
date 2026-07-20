@@ -92,37 +92,53 @@ export default async function AssignmentExplorerPage() {
                     ) : (
                       <div className="flex flex-wrap gap-1">
                         {activeDepartments.map((d) => (
-                          <Badge key={d} color="blue">
-                            {humanize(d)}
-                          </Badge>
+                          <Link key={d} href={`/work-items?studentId=${s.id}&department=${d}`}>
+                            <Badge color="blue">{humanize(d)}</Badge>
+                          </Link>
                         ))}
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-[var(--ink)]">{counts.assigned}</td>
+                  <td className="px-4 py-2.5 font-mono text-[var(--ink)]">
+                    <Link href={`/work-items?studentId=${s.id}&filter=assigned`} className="hover:underline">
+                      {counts.assigned}
+                    </Link>
+                  </td>
                   <td className="px-4 py-2.5">
                     {counts.overdue > 0 ? (
-                      <Badge color="red">{counts.overdue}</Badge>
+                      <Link href={`/work-items?studentId=${s.id}&filter=overdue`}>
+                        <Badge color="red">{counts.overdue}</Badge>
+                      </Link>
                     ) : (
                       <span className="font-mono text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
                     {counts.blocked > 0 ? (
-                      <Badge color="amber">{counts.blocked}</Badge>
+                      <Link href={`/work-items?studentId=${s.id}&filter=blocked`}>
+                        <Badge color="amber">{counts.blocked}</Badge>
+                      </Link>
                     ) : (
                       <span className="font-mono text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
                     {unassignedCount > 0 ? (
-                      <Badge color="amber">{unassignedCount}</Badge>
+                      <Link href={`/work-items?studentId=${s.id}&unassigned=true`}>
+                        <Badge color="amber">{unassignedCount}</Badge>
+                      </Link>
                     ) : (
                       <span className="font-mono text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
-                    {bottleneck ? <Badge color="red">Bottleneck</Badge> : <Badge color="green">Clear</Badge>}
+                    {bottleneck ? (
+                      <Link href={`/work-items?studentId=${s.id}`}>
+                        <Badge color="red">Bottleneck</Badge>
+                      </Link>
+                    ) : (
+                      <Badge color="green">Clear</Badge>
+                    )}
                   </td>
                 </tr>
               ))}

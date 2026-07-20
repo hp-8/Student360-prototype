@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, EmptyState } from "@/components/ui";
@@ -56,7 +57,7 @@ export default async function WorkloadPage() {
           {d.items.length === 0 ? (
             <EmptyState>No work items in this department.</EmptyState>
           ) : (
-            <QueueTiles counts={d.counts} dense />
+            <QueueTiles counts={d.counts} dense baseHref={`/work-items?department=${d.dept}`} />
           )}
         </Card>
       ))}
@@ -84,7 +85,10 @@ export default async function WorkloadPage() {
                 {row.items.map((item) => (
                   <li key={item.id} className="flex justify-between">
                     <span>
-                      {item.title} · {studentName(item.student)}
+                      {item.title} ·{" "}
+                      <Link href={`/students/${item.studentId}`} className="underline hover:text-[var(--navy)]">
+                        {studentName(item.student)}
+                      </Link>
                     </span>
                     <Badge color={statusColor(item.status)}>{humanize(item.status)}</Badge>
                   </li>
@@ -114,7 +118,11 @@ export default async function WorkloadPage() {
             {unassignedItems.map((item) => (
               <li key={item.id} className="flex justify-between">
                 <span>
-                  {item.title} · {studentName(item.student)} · {humanize(item.department)}
+                  {item.title} ·{" "}
+                  <Link href={`/students/${item.studentId}`} className="underline hover:text-[var(--navy)]">
+                    {studentName(item.student)}
+                  </Link>{" "}
+                  · {humanize(item.department)}
                 </span>
                 <Badge color={statusColor(item.priority)}>{humanize(item.priority)}</Badge>
               </li>

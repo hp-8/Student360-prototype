@@ -15,12 +15,14 @@ export type TimelineEntry = {
   description?: string;
   kind: TimelineKind;
   tone?: "positive" | "negative" | "neutral";
+  href?: string;
 };
 
 type TimelineStudent = {
   enquiryDate: Date;
   createdAt: Date;
   studyOptions: {
+    id: string;
     universityName: string;
     courseName: string;
     createdAt: Date;
@@ -34,6 +36,7 @@ type TimelineStudent = {
     releasedAt: Date | null;
   }[];
   visaCases: {
+    id: string;
     country: { name: string };
     visaRoute: { name: string };
     openedAt: Date;
@@ -76,6 +79,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
       label: `Study option added — ${so.universityName}`,
       description: so.courseName,
       kind: "study",
+      href: `/study-options/${so.id}`,
     });
     for (const app of so.applications) {
       if (app.offer) {
@@ -84,6 +88,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
           label: `Offer received — ${app.offer.universityName}`,
           description: app.offer.status.replaceAll("_", " "),
           kind: "offer",
+          href: `/study-options/${so.id}`,
         });
       }
     }
@@ -105,11 +110,13 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
   }
 
   for (const vc of student.visaCases) {
+    const vcHref = `/visa/${vc.id}`;
     entries.push({
       date: vc.openedAt,
       label: `Visa case opened — ${vc.country.name}`,
       description: vc.visaRoute.name,
       kind: "visa_case",
+      href: vcHref,
     });
 
     for (const attempt of vc.attempts) {
@@ -117,6 +124,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
         date: attempt.startedAt,
         label: `Visa attempt #${attempt.attemptNumber} started`,
         kind: "visa_attempt",
+        href: vcHref,
       });
       for (const ev of attempt.events) {
         const isOutcome = ev.type === "APPROVAL" || ev.type === "REFUSAL";
@@ -126,6 +134,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
           description: ev.notes ?? undefined,
           kind: isOutcome ? "outcome" : "visa_event",
           tone: ev.type === "APPROVAL" ? "positive" : ev.type === "REFUSAL" ? "negative" : undefined,
+          href: vcHref,
         });
       }
     }
@@ -136,6 +145,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
         label: `Visa case closed — ${vc.country.name}`,
         description: vc.closeReason?.replaceAll("_", " "),
         kind: "outcome",
+        href: vcHref,
       });
     }
   }

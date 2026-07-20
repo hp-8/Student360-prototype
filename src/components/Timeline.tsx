@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { TimelineEntry } from "@/lib/domain/timeline";
 
 const DOT_COLOR: Record<string, string> = {
@@ -28,17 +29,32 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
             <p className="font-mono text-[0.6875rem] text-[var(--ink-faint)] uppercase tracking-wide">
               {entry.date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
-            <p
-              className={`text-sm font-medium ${
-                tone === "positive"
-                  ? "text-[var(--status-green-fg)]"
-                  : tone === "negative"
-                    ? "text-[var(--status-red-fg)]"
-                    : "text-[var(--ink)]"
-              }`}
-            >
-              {entry.label}
-            </p>
+            {entry.href ? (
+              <Link
+                href={entry.href}
+                className={`text-sm font-medium hover:underline ${
+                  tone === "positive"
+                    ? "text-[var(--status-green-fg)]"
+                    : tone === "negative"
+                      ? "text-[var(--status-red-fg)]"
+                      : "text-[var(--ink)]"
+                }`}
+              >
+                {entry.label}
+              </Link>
+            ) : (
+              <p
+                className={`text-sm font-medium ${
+                  tone === "positive"
+                    ? "text-[var(--status-green-fg)]"
+                    : tone === "negative"
+                      ? "text-[var(--status-red-fg)]"
+                      : "text-[var(--ink)]"
+                }`}
+              >
+                {entry.label}
+              </p>
+            )}
             {entry.description && (
               <p className="text-xs text-[var(--ink-soft)] mt-0.5">{entry.description}</p>
             )}
