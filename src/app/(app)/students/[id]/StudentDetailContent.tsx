@@ -64,7 +64,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
         include: {
           country: true,
           visaRoute: true,
-          activeOffer: true,
+          activeOffer: { include: { application: true } },
           assignedTo: true,
           attempts: {
             include: { events: { orderBy: { eventDate: "asc" } } },

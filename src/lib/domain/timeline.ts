@@ -54,6 +54,7 @@ type TimelineStudent = {
     openedAt: Date;
     closedAt: Date | null;
     closeReason: string | null;
+    activeOffer: { application: { studyOptionId: string } | null } | null;
     attempts: {
       attemptNumber: number;
       startedAt: Date;
@@ -123,14 +124,16 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
   }
 
   for (const cc of student.countryConfirmations) {
-    const mergingStudyOptionIds = student.studyOptions
-      .filter((so) => so.countryId === cc.countryId)
-      .map((so) => so.id);
+    // Confirming a country doesn't yet pick a specific university within it -
+    // a student can still be weighing several study options there. So this
+    // stays a trunk-only milestone; it doesn't absorb any branch. The actual
+    // "this is the one we're pursuing" merge happens below, at whichever
+    // study option the eventual visa case's active offer points to - the
+    // other study options for that country just dead-end where they are.
     entries.push({
       date: cc.confirmedAt,
       label: `Country confirmed — ${cc.country.name}`,
       kind: "country",
-      mergesLaneKeys: mergingStudyOptionIds.length > 0 ? mergingStudyOptionIds : undefined,
     });
     if (cc.releasedAt) {
       entries.push({
@@ -143,12 +146,14 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
 
   for (const vc of student.visaCases) {
     const vcHref = `/visa/${vc.id}`;
+    const pursuedStudyOptionId = vc.activeOffer?.application?.studyOptionId;
     entries.push({
       date: vc.openedAt,
       label: `Visa application started — ${vc.country.name}`,
       description: vc.visaRoute.name,
       kind: "visa_case",
       href: vcHref,
+      mergesLaneKeys: pursuedStudyOptionId ? [pursuedStudyOptionId] : undefined,
     });
 
     for (const attempt of vc.attempts) {
@@ -187,8 +192,9 @@ export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEnt
 
 // Lays entries out onto a trunk (lane 0) plus one branch lane per distinct
 // laneKey, in first-seen (chronological) order — the data needed to draw a
-// git-graph-style view where study options fork off the trunk and rejoin it
-// when their country gets confirmed.
+// git-graph-style view where study options fork off the trunk and only the
+// one actually being pursued (the visa case's active offer) rejoins it;
+// every other study option for that country simply dead-ends where it is.
 function assignLanes(entries: TimelineEntry[]): LanedTimelineEntry[] {
   const laneOf = new Map<string, number>();
   let nextLane = 1;
