@@ -6,9 +6,9 @@ import {
   recordOffer,
   updateOfferStatus,
   updateApplicationStatus,
-  createSopRecord,
   updateStudyOptionStatus,
 } from "@/lib/domain/studyOptions";
+import { createSopRecord, updateSopStatus } from "@/lib/domain/sop";
 import { logActivity } from "@/lib/domain/audit";
 import { prisma } from "@/lib/prisma";
 import type { OfferStatus, StudyOptionStatus, ApplicationStatus, SopStatus } from "@prisma/client";
@@ -99,18 +99,16 @@ export async function createSopRecordAction(formData: FormData) {
   const session = await requireRole("APPLICATIONS_TEAM", "MANAGER");
   const studyOptionId = String(formData.get("studyOptionId"));
   const studentId = String(formData.get("studentId"));
-  const sop = await createSopRecord({
-    studyOptionId,
-    assignedToId: session.role === "APPLICATIONS_TEAM" ? session.id : null,
-    content: String(formData.get("content") ?? "").trim() || null,
-  });
-  await logActivity(prisma, {
+  await createSopRecord(
+    {
+      kind: "UNIVERSITY",
+      studyOptionId,
+      assignedToId: session.role === "APPLICATIONS_TEAM" ? session.id : null,
+      content: String(formData.get("content") ?? "").trim() || null,
+    },
     studentId,
-    actorId: session.id,
-    action: "Started an SOP record",
-    entityType: "SopRecord",
-    entityId: sop.id,
-  });
+    session.id
+  );
   revalidatePath(`/study-options/${studyOptionId}`);
 }
 
@@ -120,14 +118,7 @@ export async function updateSopStatusAction(formData: FormData) {
   const studentId = String(formData.get("studentId"));
   const sopId = String(formData.get("sopId"));
   const status = String(formData.get("status")) as SopStatus;
-  await prisma.sopRecord.update({ where: { id: sopId }, data: { status } });
-  await logActivity(prisma, {
-    studentId,
-    actorId: session.id,
-    action: `Changed SOP status to ${humanize(status)}`,
-    entityType: "SopRecord",
-    entityId: sopId,
-  });
+  await updateSopStatus(sopId, status, studentId, session.id);
   revalidatePath(`/study-options/${studyOptionId}`);
 }
 

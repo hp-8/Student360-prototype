@@ -48,6 +48,11 @@ enum SopStatus {
   FINAL
 }
 
+enum SopKind {
+  UNIVERSITY
+  VISA
+}
+
 enum OfferStatus {
   CONDITIONAL
   UNCONDITIONAL
@@ -415,16 +420,28 @@ model ApplicationRecord {
   offer       Offer?
 }
 
+// Two distinct documents share this shape and lifecycle:
+// - UNIVERSITY: the admissions statement of purpose, scoped to a StudyOption.
+// - VISA: the immigration-facing statement (Motivation Letter, Lettre de
+//   Motivation, Letter of Intent, etc. - the expected name varies by country,
+//   hence the free-text documentLabel), scoped to a VisaCase. Its content
+//   argues the country/course choice and, critically, ties to home and intent
+//   to return - a University SOP doesn't need to make that case at all.
+// Exactly one of studyOptionId / visaCaseId is set, matching kind.
 model SopRecord {
   id            String    @id @default(cuid())
-  studyOptionId String
+  kind          SopKind   @default(UNIVERSITY)
+  studyOptionId String?
+  visaCaseId    String?
+  documentLabel String?
   status        SopStatus @default(NOT_STARTED)
   content       String?
   assignedToId  String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  studyOption StudyOption @relation(fields: [studyOptionId], references: [id])
+  studyOption StudyOption? @relation(fields: [studyOptionId], references: [id])
+  visaCase    VisaCase?    @relation(fields: [visaCaseId], references: [id])
 }
 
 model Offer {
@@ -501,6 +518,7 @@ model VisaCase {
   checklistItems CaseChecklistItem[]
   workItems      WorkItem[]
   documentLinks  DocumentLink[]
+  sopRecords     SopRecord[]
 }
 
 model VisaAttempt {

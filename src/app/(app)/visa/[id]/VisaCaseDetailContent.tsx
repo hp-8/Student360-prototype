@@ -22,6 +22,8 @@ import {
   changeActiveOfferAction,
   updateChecklistItemAction,
   addChecklistItemAction,
+  createVisaStatementAction,
+  updateVisaStatementStatusAction,
 } from "./actions";
 
 const ATTEMPT_STATUSES = [
@@ -48,6 +50,7 @@ const EVENT_TYPES = [
   "NOTE",
 ];
 const CHECKLIST_STATUSES = ["PENDING", "RECEIVED", "VERIFIED", "WAIVED"];
+const SOP_STATUSES = ["NOT_STARTED", "DRAFTING", "REVIEW", "FINAL"];
 
 export async function VisaCaseDetailContent({ id }: { id: string }) {
   const session = await requireRole("COUNSELLOR", "VISA_TEAM", "MANAGER");
@@ -64,6 +67,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
       openedBy: true,
       attempts: { include: { events: { orderBy: { eventDate: "asc" } } }, orderBy: { attemptNumber: "desc" } },
       checklistItems: { orderBy: { createdAt: "asc" } },
+      sopRecords: { orderBy: { createdAt: "desc" } },
     },
   });
   if (!visaCase) notFound();
@@ -203,6 +207,82 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
               <Button type="submit" variant="secondary">
                 Add
               </Button>
+            </form>
+          </details>
+        )}
+      </Card>
+
+      <Card className="p-5">
+        <SectionTitle>Visa statement</SectionTitle>
+        <p className="text-xs text-[var(--ink-soft)] -mt-2 mb-3">
+          The immigration-facing statement for this country — a Motivation Letter, Lettre de Motivation, Letter of
+          Intent, or whatever this route calls it. Distinct from the university admissions SOP: it argues the
+          country/course choice and demonstrates ties to home and intent to return.
+        </p>
+        {visaCase.sopRecords.length === 0 ? (
+          <EmptyState>No visa statement started.</EmptyState>
+        ) : (
+          <div className="flex flex-col gap-3 mb-4">
+            {visaCase.sopRecords.map((sop) => (
+              <div key={sop.id} className="border border-[var(--paper-line)] rounded-md p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-[var(--ink)]">
+                    {sop.documentLabel || "Visa statement"}
+                  </span>
+                  <Badge color={statusColor(sop.status)}>{humanize(sop.status)}</Badge>
+                </div>
+                <p className="text-xs text-[var(--ink-soft)] mb-2">
+                  Created {sop.createdAt.toLocaleDateString()}
+                </p>
+                {canEdit && (
+                  <form action={updateVisaStatementStatusAction} className="flex items-end gap-3">
+                    <input type="hidden" name="visaCaseId" value={visaCase.id} />
+                    <input type="hidden" name="studentId" value={visaCase.studentId} />
+                    <input type="hidden" name="sopId" value={sop.id} />
+                    <Field label="Status">
+                      <select name="status" defaultValue={sop.status} className={inputClass}>
+                        {SOP_STATUSES.map((s) => (
+                          <option key={s} value={s}>
+                            {humanize(s)}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Button type="submit" variant="secondary">
+                      Update
+                    </Button>
+                  </form>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        {canEdit && (
+          <details>
+            <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">+ Start visa statement</summary>
+            <form action={createVisaStatementAction} className="flex flex-col gap-3 mt-3">
+              <input type="hidden" name="visaCaseId" value={visaCase.id} />
+              <input type="hidden" name="studentId" value={visaCase.studentId} />
+              <Field label="Document name">
+                <input
+                  name="documentLabel"
+                  className={inputClass}
+                  placeholder="e.g. Motivation Letter, Lettre de Motivation, Letter of Intent"
+                />
+              </Field>
+              <Field label="Content">
+                <textarea
+                  name="content"
+                  rows={4}
+                  className={inputClass}
+                  placeholder="Cover why this country and course, how it fits your future, and why you'll return home once your studies/training are complete..."
+                />
+              </Field>
+              <div>
+                <Button type="submit" variant="secondary">
+                  Start visa statement
+                </Button>
+              </div>
             </form>
           </details>
         )}

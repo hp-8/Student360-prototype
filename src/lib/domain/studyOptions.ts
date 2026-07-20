@@ -96,10 +96,3 @@ export async function updateOfferStatus(offerId: string, status: OfferStatus) {
   return prisma.offer.update({ where: { id: offerId }, data: { status } });
 }
 
-export async function createSopRecord(data: {
-  studyOptionId: string;
-  assignedToId?: string | null;
-  content?: string | null;
-}) {
-  return prisma.sopRecord.create({ data });
-}

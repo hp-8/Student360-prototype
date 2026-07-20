@@ -9,7 +9,8 @@ import {
   updateChecklistItemStatus,
   addOfferSpecificChecklistItem,
 } from "@/lib/domain/visaCases";
-import type { VisaAttemptStatus, VisaEventType, ChecklistItemStatus } from "@prisma/client";
+import { createSopRecord, updateSopStatus } from "@/lib/domain/sop";
+import type { VisaAttemptStatus, VisaEventType, ChecklistItemStatus, SopStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function updateAttemptAction(formData: FormData) {
@@ -66,5 +67,33 @@ export async function addChecklistItemAction(formData: FormData) {
   const title = String(formData.get("title")).trim();
   const description = String(formData.get("description") ?? "").trim() || null;
   await addOfferSpecificChecklistItem({ visaCaseId, title, description });
+  revalidatePath(`/visa/${visaCaseId}`);
+}
+
+export async function createVisaStatementAction(formData: FormData) {
+  const session = await requireRole("VISA_TEAM", "MANAGER");
+  const visaCaseId = String(formData.get("visaCaseId"));
+  const studentId = String(formData.get("studentId"));
+  await createSopRecord(
+    {
+      kind: "VISA",
+      visaCaseId,
+      documentLabel: String(formData.get("documentLabel") ?? "").trim() || null,
+      assignedToId: session.role === "VISA_TEAM" ? session.id : null,
+      content: String(formData.get("content") ?? "").trim() || null,
+    },
+    studentId,
+    session.id
+  );
+  revalidatePath(`/visa/${visaCaseId}`);
+}
+
+export async function updateVisaStatementStatusAction(formData: FormData) {
+  const session = await requireRole("VISA_TEAM", "MANAGER");
+  const visaCaseId = String(formData.get("visaCaseId"));
+  const studentId = String(formData.get("studentId"));
+  const sopId = String(formData.get("sopId"));
+  const status = String(formData.get("status")) as SopStatus;
+  await updateSopStatus(sopId, status, studentId, session.id);
   revalidatePath(`/visa/${visaCaseId}`);
 }

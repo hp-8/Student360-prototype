@@ -268,19 +268,29 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <EmptyState>No study options yet.</EmptyState>
           ) : (
             <div className="flex flex-col gap-2 mb-4">
-              {student.studyOptions.map((so) => (
-                <Link
-                  key={so.id}
-                  href={`/study-options/${so.id}`}
-                  className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-3 py-2 hover:bg-[var(--paper)]"
-                >
-                  <span className="text-sm font-medium text-[var(--ink)]">{so.universityName}</span>
-                  <span className="text-xs text-[var(--ink-soft)]">
-                    {so.country.name} · {so.intake}
-                    {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
-                  </span>
-                </Link>
-              ))}
+              {student.studyOptions.map((so) => {
+                const latestSop = [...so.sopRecords].sort(
+                  (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
+                )[0];
+                return (
+                  <Link
+                    key={so.id}
+                    href={`/study-options/${so.id}`}
+                    className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-3 py-2 hover:bg-[var(--paper)]"
+                  >
+                    <span className="text-sm font-medium text-[var(--ink)]">{so.universityName}</span>
+                    <span className="flex items-center gap-2">
+                      <span className="text-xs text-[var(--ink-soft)]">
+                        {so.country.name} · {so.intake}
+                        {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
+                      </span>
+                      {latestSop && (
+                        <Badge color={statusColor(latestSop.status)}>SOP: {humanize(latestSop.status)}</Badge>
+                      )}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           )}
           {canEditStudyOptions && (
