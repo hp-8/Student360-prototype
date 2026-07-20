@@ -233,6 +233,7 @@ model Country {
   countryConfirmations CountryConfirmation[]
   leadsIntending       Lead[]                @relation("LeadIntendedCountry")
   studentsIntending    Student[]             @relation("StudentIntendedCountry")
+  intakes              Intake[]
 }
 
 model VisaRoute {
@@ -259,6 +260,20 @@ model RequirementTemplate {
   visaCases VisaCase[]
 
   @@unique([visaRouteId, version])
+}
+
+model Intake {
+  id                  String    @id @default(cuid())
+  countryId           String
+  name                String // e.g. "Fall 2026", "January 2027"
+  applicationDeadline DateTime?
+  notes               String?
+  createdAt           DateTime  @default(now())
+
+  country      Country       @relation(fields: [countryId], references: [id])
+  studyOptions StudyOption[]
+
+  @@unique([countryId, name])
 }
 
 // =========================================================================
@@ -367,6 +382,7 @@ model StudyOption {
   universityName       String
   courseName           String
   intake               String
+  intakeId             String?
   status               StudyOptionStatus @default(ACTIVE)
   assignedCounsellorId String?
   assignedAppsUserId   String?
@@ -378,6 +394,7 @@ model StudyOption {
   country            Country @relation(fields: [countryId], references: [id])
   assignedCounsellor User?   @relation("StudyOptionCounsellor", fields: [assignedCounsellorId], references: [id])
   assignedAppsUser   User?   @relation("StudyOptionAppsUser", fields: [assignedAppsUserId], references: [id])
+  intakeCatalog      Intake? @relation(fields: [intakeId], references: [id])
 
   applications  ApplicationRecord[]
   sopRecords    SopRecord[]

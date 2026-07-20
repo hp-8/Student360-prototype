@@ -13,6 +13,8 @@ import {
 } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
 import { Timeline } from "@/components/Timeline";
+import { BackLink } from "@/components/BackLink";
+import { IntakePicker } from "@/components/IntakePicker";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { getDirectReports } from "@/lib/domain/hierarchy";
 import { hasCaseAccess } from "@/lib/domain/audit";
@@ -52,6 +54,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
           assignedAppsUser: true,
           applications: { include: { offer: true } },
           sopRecords: true,
+          intakeCatalog: { select: { name: true, applicationDeadline: true } },
         },
         orderBy: { createdAt: "desc" },
       },
@@ -85,11 +88,12 @@ export async function StudentDetailContent({ id }: { id: string }) {
   const canManageCaseManager = session.role === "MANAGER";
   const showVisaSection = session.role !== "APPLICATIONS_TEAM";
 
-  const [countries, counsellors] = await Promise.all([
+  const [countries, counsellors, intakes] = await Promise.all([
     prisma.country.findMany({ orderBy: { name: "asc" } }),
     canManageCaseManager
       ? getDirectReports(session.id, "COUNSELLOR")
       : prisma.user.findMany({ where: { roles: { has: "COUNSELLOR" }, active: true } }),
+    prisma.intake.findMany({ select: { id: true, name: true, countryId: true } }),
   ]);
 
   const confirmedCountryIds = new Set(
@@ -283,19 +287,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
           </summary>
           <form action={createStudyOptionAction} className="grid grid-cols-2 gap-3 mt-3">
             <input type="hidden" name="studentId" value={student.id} />
-            <Field label="Country">
-              <select name="countryId" required className={inputClass}>
-                <option value="">Select country</option>
-                {countries.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Intake">
-              <input name="intake" required placeholder="e.g. Fall 2026" className={inputClass} />
-            </Field>
+            <IntakePicker countries={countries} intakes={intakes} />
             <Field label="University">
               <input name="universityName" required className={inputClass} />
             </Field>
@@ -322,7 +314,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
               href={`/visa/new?studentId=${student.id}`}
               className="text-sm text-[var(--ink)] underline"
             >
-              Open visa case
+              Start visa application
             </Link>
           )
         }
@@ -330,7 +322,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
         Visa cases
       </SectionTitle>
       {student.visaCases.length === 0 ? (
-        <EmptyState>No visa case opened yet.</EmptyState>
+        <EmptyState>No visa application started yet.</EmptyState>
       ) : (
         <div className="flex flex-col gap-2">
           {student.visaCases.map((vc) => {
@@ -509,13 +501,14 @@ export async function StudentDetailContent({ id }: { id: string }) {
     { label: "Journey", content: timelineTab },
     { label: "Overview", content: overviewTab },
     { label: "Study Options", content: studyOptionsTab },
-    ...(showVisaSection ? [{ label: "Visa Cases", content: visaTab }] : []),
+    ...(showVisaSection ? [{ label: "Visa Applications", content: visaTab }] : []),
     { label: "Documents", content: documentsTab },
     { label: "Activity", content: activityTab },
   ];
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink />
       <Card className="p-5">
         <div className="flex items-start justify-between">
           <div>

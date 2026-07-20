@@ -46,8 +46,8 @@ export default async function AssignmentExplorerPage() {
   return (
     <div className="flex flex-col gap-5">
       <PageHeader
-        title="Assignment explorer"
-        description="Who owns this student, which department currently holds the work, and where the bottleneck is."
+        title="Case ownership"
+        description="Who owns this student, which department currently holds the work, and where things are stuck."
       />
 
       <Card>
@@ -59,13 +59,13 @@ export default async function AssignmentExplorerPage() {
               <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
                 <th className="px-4 py-2.5 font-medium">Student</th>
                 <th className="px-4 py-2.5 font-medium">Case manager</th>
-                <th className="px-4 py-2.5 font-medium">Visa case owner</th>
+                <th className="px-4 py-2.5 font-medium">Visa application owner</th>
                 <th className="px-4 py-2.5 font-medium">Active departments</th>
                 <th className="px-4 py-2.5 font-medium">Open</th>
                 <th className="px-4 py-2.5 font-medium">Overdue</th>
                 <th className="px-4 py-2.5 font-medium">Blocked</th>
                 <th className="px-4 py-2.5 font-medium">Unassigned</th>
-                <th className="px-4 py-2.5 font-medium">Bottleneck</th>
+                <th className="px-4 py-2.5 font-medium">Needs attention</th>
               </tr>
             </thead>
             <tbody>
@@ -134,10 +134,10 @@ export default async function AssignmentExplorerPage() {
                   <td className="px-4 py-2.5">
                     {bottleneck ? (
                       <Link href={`/work-items?studentId=${s.id}`}>
-                        <Badge color="red">Bottleneck</Badge>
+                        <Badge color="red">Needs attention</Badge>
                       </Link>
                     ) : (
-                      <Badge color="green">Clear</Badge>
+                      <Badge color="green">On track</Badge>
                     )}
                   </td>
                 </tr>

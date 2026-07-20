@@ -62,7 +62,7 @@ export default async function ManagerStudentsPage({
             {countryFilter ? (
               <>
                 {" "}
-                · Destination: <span className="font-medium text-[var(--ink)]">{countryFilter}</span>
+                · Country: <span className="font-medium text-[var(--ink)]">{countryFilter}</span>
               </>
             ) : null}
           </p>
@@ -83,7 +83,7 @@ export default async function ManagerStudentsPage({
                 <th className="px-4 py-2.5 font-medium">Stage</th>
                 <th className="px-4 py-2.5 font-medium">Case manager</th>
                 <th className="px-4 py-2.5 font-medium">Branch</th>
-                <th className="px-4 py-2.5 font-medium">Destination</th>
+                <th className="px-4 py-2.5 font-medium">Country</th>
                 <th className="px-4 py-2.5 font-medium">Study options</th>
               </tr>
             </thead>

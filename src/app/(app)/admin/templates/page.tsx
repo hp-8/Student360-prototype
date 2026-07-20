@@ -17,7 +17,7 @@ export default async function AdminTemplatesPage() {
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Requirement templates"
-        description="Versioned base checklists per country/visa route. Creating a new version does not alter checklists already generated for in-progress visa cases."
+        description="Versioned base checklists per country/visa route. Creating a new version does not alter checklists already generated for in-progress visa applications."
       />
 
       {routes.map((route) => {

@@ -25,7 +25,7 @@ export default async function NewVisaCasePage({
   return (
     <div>
       <PageHeader
-        title="Open a new visa case"
+        title="Start a new visa application"
         description="Manual entry point for both internally-confirmed study options and visa-only students arriving with an external offer."
       />
       <NewVisaCaseForm

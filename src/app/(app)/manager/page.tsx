@@ -100,7 +100,7 @@ export default async function ManagerDashboardPage() {
     <div className="flex flex-col gap-5">
       <PageHeader
         title="Pipeline overview"
-        description="Where every student stands right now. Visa outcomes are counted per visa case, not per student."
+        description="Where every student stands right now. Visa outcomes are counted per visa application, not per student."
       />
 
       <div className="grid grid-cols-3 gap-4">
@@ -112,7 +112,7 @@ export default async function ManagerDashboardPage() {
         </Link>
         <Link href="/manager/workload">
           <Card className="p-5 hover:shadow-[var(--shadow-card-hover)] transition-shadow">
-            <p className="text-sm text-[var(--ink-soft)]">Open visa cases</p>
+            <p className="text-sm text-[var(--ink-soft)]">Open visa applications</p>
             <p className="text-3xl font-semibold text-[var(--ink)] mt-1">{visaCaseCount}</p>
           </Card>
         </Link>
@@ -153,7 +153,7 @@ export default async function ManagerDashboardPage() {
 
       <div className="grid grid-cols-2 gap-4">
         <Card className="p-5">
-          <SectionTitle>Visa outcomes (case level)</SectionTitle>
+          <SectionTitle>Visa outcomes</SectionTitle>
           <div className="flex flex-wrap gap-2">
             {(["APPROVED", "REFUSED", "IN_PROGRESS"] as const).map((key) => {
               const label = key === "IN_PROGRESS" ? "In progress" : key === "APPROVED" ? "Approved" : "Refused";

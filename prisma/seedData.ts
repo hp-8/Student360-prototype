@@ -132,6 +132,25 @@ export async function seedDatabase() {
     },
   });
 
+  console.log("Creating intakes with application deadlines...");
+  const intakeDefs: { countryId: string; name: string; applicationDeadline: Date | null }[] = [
+    { countryId: germany.id, name: "Fall 2026", applicationDeadline: new Date("2026-09-01") },
+    { countryId: germany.id, name: "Spring 2026", applicationDeadline: new Date("2026-02-01") },
+    { countryId: germany.id, name: "Spring 2027", applicationDeadline: null },
+    { countryId: uk.id, name: "Fall 2026", applicationDeadline: new Date("2026-08-15") },
+    { countryId: uk.id, name: "Spring 2026", applicationDeadline: new Date("2026-01-10") },
+    { countryId: uk.id, name: "January 2027", applicationDeadline: null },
+    { countryId: france.id, name: "Fall 2026", applicationDeadline: new Date("2026-08-20") },
+    { countryId: canada.id, name: "Fall 2026", applicationDeadline: new Date("2026-08-01") },
+    { countryId: canada.id, name: "Winter 2027", applicationDeadline: null },
+  ];
+  const intakesByKey = new Map<string, string>();
+  for (const def of intakeDefs) {
+    const intake = await prisma.intake.create({ data: def });
+    intakesByKey.set(`${def.countryId}::${def.name}`, intake.id);
+  }
+  const intakeIdFor = (countryId: string, name: string) => intakesByKey.get(`${countryId}::${name}`);
+
   await prisma.requirementTemplate.create({
     data: {
       visaRouteId: germanyRoute.id,
@@ -257,6 +276,7 @@ export async function seedDatabase() {
       universityName: "RWTH Aachen University",
       courseName: "MSc Computer Science",
       intake: "Fall 2026",
+      intakeId: intakeIdFor(germany.id, "Fall 2026"),
       assignedCounsellorId: counsellor.id,
       assignedAppsUserId: appsTeam.id,
     },
@@ -269,6 +289,7 @@ export async function seedDatabase() {
       universityName: "University of Manchester",
       courseName: "MSc Data Science",
       intake: "Fall 2026",
+      intakeId: intakeIdFor(uk.id, "Fall 2026"),
       assignedCounsellorId: counsellor.id,
       assignedAppsUserId: appsTeam.id,
     },
@@ -390,6 +411,7 @@ export async function seedDatabase() {
       universityName: "TU Munich",
       courseName: "MSc Mechanical Engineering",
       intake: "Spring 2026",
+      intakeId: intakeIdFor(germany.id, "Spring 2026"),
       assignedCounsellorId: counsellor2.id,
       assignedAppsUserId: appsTeam2.id,
     },
@@ -402,6 +424,7 @@ export async function seedDatabase() {
       universityName: "University of Leeds",
       courseName: "MSc Mechanical Engineering",
       intake: "Spring 2026",
+      intakeId: intakeIdFor(uk.id, "Spring 2026"),
       assignedCounsellorId: counsellor2.id,
       assignedAppsUserId: appsTeam2.id,
     },
@@ -521,6 +544,7 @@ export async function seedDatabase() {
         universityName: entry.uni,
         courseName: "MSc Data Engineering",
         intake: "Fall 2026",
+        intakeId: intakeIdFor(germany.id, "Fall 2026"),
         assignedCounsellorId: counsellor.id,
         assignedAppsUserId: appsTeam.id,
       },
@@ -688,6 +712,7 @@ export async function seedDatabase() {
       universityName: "Karlsruhe Institute of Technology",
       courseName: "MSc Physics",
       intake: "Fall 2026",
+      intakeId: intakeIdFor(germany.id, "Fall 2026"),
       assignedCounsellorId: counsellor.id,
       assignedAppsUserId: appsTeam.id,
     },
@@ -700,6 +725,7 @@ export async function seedDatabase() {
       universityName: "Sorbonne University",
       courseName: "MSc Physics",
       intake: "Fall 2026",
+      intakeId: intakeIdFor(france.id, "Fall 2026"),
       assignedCounsellorId: counsellor.id,
       assignedAppsUserId: appsTeam.id,
     },

@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth/password";
 import type { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
+import { propagateIntakeDeadline } from "@/lib/domain/intakes";
 
 export async function createUserAction(formData: FormData) {
   await requireRole("ADMINISTRATOR");
@@ -102,4 +103,32 @@ export async function createRequirementTemplateAction(formData: FormData) {
     }),
   ]);
   revalidatePath("/admin/templates");
+}
+
+export async function createIntakeAction(formData: FormData) {
+  await requireRole("ADMINISTRATOR");
+  const countryId = String(formData.get("countryId"));
+  const name = String(formData.get("name")).trim();
+  const deadlineRaw = String(formData.get("applicationDeadline") ?? "");
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+
+  await prisma.intake.create({
+    data: {
+      countryId,
+      name,
+      applicationDeadline: deadlineRaw ? new Date(deadlineRaw) : null,
+      notes,
+    },
+  });
+  revalidatePath("/admin/intakes");
+}
+
+export async function setIntakeDeadlineAction(formData: FormData) {
+  const session = await requireRole("ADMINISTRATOR");
+  const intakeId = String(formData.get("intakeId"));
+  const deadlineRaw = String(formData.get("applicationDeadline") ?? "");
+
+  await propagateIntakeDeadline(intakeId, deadlineRaw ? new Date(deadlineRaw) : null, session.id);
+  revalidatePath("/admin/intakes");
+  revalidatePath("/work-items");
 }

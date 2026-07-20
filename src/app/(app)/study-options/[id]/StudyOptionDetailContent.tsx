@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { staffName, studentName } from "@/lib/displayName";
+import { BackLink } from "@/components/BackLink";
 import {
   createApplicationAction,
   updateApplicationStatusAction,
@@ -50,6 +51,7 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink fallbackHref={`/students/${studyOption.studentId}`} />
       <PageHeader
         title={`${studyOption.universityName} · ${studyOption.courseName}`}
         description={

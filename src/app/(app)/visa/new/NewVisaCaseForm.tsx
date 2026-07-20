@@ -149,7 +149,7 @@ export function NewVisaCaseForm({
       </Field>
 
       <Button type="submit" className="w-fit">
-        Open visa case
+        Start visa application
       </Button>
     </form>
   );

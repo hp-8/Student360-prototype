@@ -9,6 +9,7 @@ export async function createStudyOption(
     universityName: string;
     courseName: string;
     intake: string;
+    intakeId?: string | null;
     assignedCounsellorId?: string | null;
     assignedAppsUserId?: string | null;
     notes?: string | null;

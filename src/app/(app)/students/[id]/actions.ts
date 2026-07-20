@@ -19,6 +19,7 @@ export async function createStudyOptionAction(formData: FormData) {
       universityName: String(formData.get("universityName")).trim(),
       courseName: String(formData.get("courseName")).trim(),
       intake: String(formData.get("intake")).trim(),
+      intakeId: String(formData.get("intakeId") ?? "") || null,
       assignedCounsellorId: session.role === "COUNSELLOR" ? session.id : String(formData.get("assignedCounsellorId") || "") || null,
       assignedAppsUserId: String(formData.get("assignedAppsUserId") || "") || null,
     },

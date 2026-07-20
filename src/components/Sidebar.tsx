@@ -1,5 +1,7 @@
+"use client";
+
 import Link from "next/link";
-import type { ComponentType } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -14,7 +16,10 @@ import {
   Building2,
   Globe,
   ClipboardList,
+  CalendarClock,
   LogOut,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react";
 import type { SessionUser } from "@/lib/auth/session";
 import { ROLE_LABEL, NAV_BY_ROLE } from "@/lib/roles";
@@ -36,8 +41,11 @@ const ICON_BY_HREF: Record<string, ComponentType<{ size?: number; className?: st
   "/admin": Settings,
   "/admin/branches": Building2,
   "/admin/countries": Globe,
+  "/admin/intakes": CalendarClock,
   "/admin/templates": ClipboardList,
 };
+
+const COLLAPSE_STORAGE_KEY = "s360-sidebar-collapsed";
 
 function initials(name: string) {
   return name
@@ -51,18 +59,38 @@ function initials(name: string) {
 
 export function Sidebar({ session }: { session: SessionUser }) {
   const navItems = NAV_BY_ROLE[session.role];
+  const [collapsed, setCollapsed] = useState(false);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
+    if (stored === "true") setCollapsed(true);
+  }, []);
+
+  function toggle() {
+    setCollapsed((prev) => {
+      const next = !prev;
+      window.localStorage.setItem(COLLAPSE_STORAGE_KEY, String(next));
+      return next;
+    });
+  }
 
   return (
-    <aside className="w-64 shrink-0 h-full bg-[var(--card)] border-r border-[var(--paper-line)] flex flex-col">
-      <div className="h-16 flex items-center gap-2.5 px-5 border-b border-[var(--paper-line)]">
-        <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--navy)] text-white font-semibold text-sm">
+    <aside
+      className={`shrink-0 h-full bg-[var(--card)] border-r border-[var(--paper-line)] flex flex-col transition-[width] duration-200 ${
+        collapsed ? "w-[68px]" : "w-64"
+      }`}
+    >
+      <div className="h-16 flex items-center gap-2.5 px-4 border-b border-[var(--paper-line)]">
+        <span className="flex items-center justify-center w-8 h-8 rounded-xl bg-[var(--navy)] text-white font-semibold text-sm shrink-0">
           S
         </span>
-        <span className="font-semibold text-[var(--ink)] tracking-tight">Student360</span>
+        {!collapsed && (
+          <span className="font-semibold text-[var(--ink)] tracking-tight truncate">Student360</span>
+        )}
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4">
-        <p className="px-3 text-xs font-medium text-[var(--ink-faint)] mb-2">Main menu</p>
+        {!collapsed && <p className="px-3 text-xs font-medium text-[var(--ink-faint)] mb-2">Main menu</p>}
         <ul className="flex flex-col gap-0.5">
           {navItems.map((item) => {
             const Icon = ICON_BY_HREF[item.href] ?? LayoutDashboard;
@@ -70,10 +98,13 @@ export function Sidebar({ session }: { session: SessionUser }) {
               <li key={item.href}>
                 <Link
                   href={item.href}
-                  className="flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm text-[var(--ink-soft)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors"
+                  title={collapsed ? item.label : undefined}
+                  className={`flex items-center gap-2.5 rounded-lg py-2 text-sm text-[var(--ink-soft)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors ${
+                    collapsed ? "justify-center px-2" : "px-3"
+                  }`}
                 >
                   <Icon size={17} className="shrink-0" />
-                  {item.label}
+                  {!collapsed && item.label}
                 </Link>
               </li>
             );
@@ -82,25 +113,56 @@ export function Sidebar({ session }: { session: SessionUser }) {
       </nav>
 
       <div className="border-t border-[var(--paper-line)] p-3 flex flex-col gap-2">
-        {session.roles.length > 1 && <RoleSwitcher roles={session.roles} activeRole={session.role} />}
-        <div className="flex items-center gap-2.5 rounded-lg px-2 py-2">
+        <button
+          type="button"
+          onClick={toggle}
+          title={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+          className={`flex items-center gap-2.5 rounded-lg py-2 text-sm text-[var(--ink-faint)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors ${
+            collapsed ? "justify-center px-2" : "px-3"
+          }`}
+        >
+          {collapsed ? <ChevronsRight size={17} /> : <ChevronsLeft size={17} />}
+          {!collapsed && "Collapse"}
+        </button>
+
+        {!collapsed && session.roles.length > 1 && (
+          <RoleSwitcher roles={session.roles} activeRole={session.role} />
+        )}
+
+        <div className={`flex items-center gap-2.5 rounded-lg py-2 ${collapsed ? "justify-center px-0" : "px-2"}`}>
           <span className="flex items-center justify-center w-8 h-8 rounded-full bg-[var(--status-blue-bg)] text-[var(--status-blue-fg)] text-xs font-semibold shrink-0">
             {initials(session.name)}
           </span>
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-medium text-[var(--ink)] truncate">{session.name}</p>
-            <p className="text-xs text-[var(--ink-faint)] truncate">{ROLE_LABEL[session.role]}</p>
-          </div>
+          {!collapsed && (
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-[var(--ink)] truncate">{session.name}</p>
+              <p className="text-xs text-[var(--ink-faint)] truncate">{ROLE_LABEL[session.role]}</p>
+            </div>
+          )}
+          {!collapsed && (
+            <form action={logoutAction}>
+              <button
+                type="submit"
+                aria-label="Log out"
+                className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--ink-faint)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors"
+              >
+                <LogOut size={16} />
+              </button>
+            </form>
+          )}
+        </div>
+        {collapsed && (
           <form action={logoutAction}>
             <button
               type="submit"
               aria-label="Log out"
-              className="flex items-center justify-center w-8 h-8 rounded-lg text-[var(--ink-faint)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors"
+              title="Log out"
+              className="w-full flex items-center justify-center py-2 rounded-lg text-[var(--ink-faint)] hover:bg-[var(--paper)] hover:text-[var(--ink)] transition-colors"
             >
               <LogOut size={16} />
             </button>
           </form>
-        </div>
+        )}
       </div>
     </aside>
   );

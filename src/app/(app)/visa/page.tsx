@@ -22,17 +22,17 @@ export default async function VisaHomePage() {
   return (
     <div>
       <PageHeader
-        title="My visa cases"
+        title="My visa applications"
         description="Cases assigned to you, across all confirmed countries and visa-only students."
         action={
           <Link href="/visa/new">
-            <Button>Open visa case</Button>
+            <Button>Start visa application</Button>
           </Link>
         }
       />
       <Card>
         {visaCases.length === 0 ? (
-          <EmptyState>No visa cases assigned yet.</EmptyState>
+          <EmptyState>No visa applications assigned yet.</EmptyState>
         ) : (
           <table className="w-full text-sm">
             <thead>

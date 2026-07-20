@@ -7,14 +7,15 @@ export type TimelineKind =
   | "visa_case"
   | "visa_attempt"
   | "visa_event"
-  | "outcome";
+  | "outcome"
+  | "deadline";
 
 export type TimelineEntry = {
   date: Date;
   label: string;
   description?: string;
   kind: TimelineKind;
-  tone?: "positive" | "negative" | "neutral";
+  tone?: "positive" | "negative" | "neutral" | "upcoming";
   href?: string;
 };
 
@@ -26,6 +27,7 @@ type TimelineStudent = {
     universityName: string;
     courseName: string;
     createdAt: Date;
+    intakeCatalog: { name: string; applicationDeadline: Date | null } | null;
     applications: {
       offer: { universityName: string; status: string; receivedDate: Date } | null;
     }[];
@@ -92,6 +94,17 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
         });
       }
     }
+
+    if (so.intakeCatalog?.applicationDeadline && so.intakeCatalog.applicationDeadline.getTime() >= Date.now()) {
+      entries.push({
+        date: so.intakeCatalog.applicationDeadline,
+        label: `Application deadline — ${so.intakeCatalog.name}`,
+        description: `${so.universityName} · ${so.courseName}`,
+        kind: "deadline",
+        tone: "upcoming",
+        href: `/study-options/${so.id}`,
+      });
+    }
   }
 
   for (const cc of student.countryConfirmations) {
@@ -113,7 +126,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
     const vcHref = `/visa/${vc.id}`;
     entries.push({
       date: vc.openedAt,
-      label: `Visa case opened — ${vc.country.name}`,
+      label: `Visa application started — ${vc.country.name}`,
       description: vc.visaRoute.name,
       kind: "visa_case",
       href: vcHref,
@@ -142,7 +155,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
     if (vc.closedAt) {
       entries.push({
         date: vc.closedAt,
-        label: `Visa case closed — ${vc.country.name}`,
+        label: `Visa application closed — ${vc.country.name}`,
         description: vc.closeReason?.replaceAll("_", " "),
         kind: "outcome",
         href: vcHref,

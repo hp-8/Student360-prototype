@@ -5,9 +5,10 @@ const DOT_COLOR: Record<string, string> = {
   positive: "bg-[var(--status-green-fg)]",
   negative: "bg-[var(--status-red-fg)]",
   neutral: "bg-[var(--navy)]",
+  upcoming: "bg-[var(--status-amber-fg)]",
 };
 
-function toneFor(entry: TimelineEntry): "positive" | "negative" | "neutral" {
+function toneFor(entry: TimelineEntry): "positive" | "negative" | "neutral" | "upcoming" {
   return entry.tone ?? "neutral";
 }
 
@@ -37,7 +38,9 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
                     ? "text-[var(--status-green-fg)]"
                     : tone === "negative"
                       ? "text-[var(--status-red-fg)]"
-                      : "text-[var(--ink)]"
+                      : tone === "upcoming"
+                        ? "text-[var(--status-amber-fg)]"
+                        : "text-[var(--ink)]"
                 }`}
               >
                 {entry.label}
@@ -49,7 +52,9 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
                     ? "text-[var(--status-green-fg)]"
                     : tone === "negative"
                       ? "text-[var(--status-red-fg)]"
-                      : "text-[var(--ink)]"
+                      : tone === "upcoming"
+                        ? "text-[var(--status-amber-fg)]"
+                        : "text-[var(--ink)]"
                 }`}
               >
                 {entry.label}

@@ -25,8 +25,8 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/work-items", label: "Work Items" },
   ],
   VISA_TEAM: [
-    { href: "/visa", label: "My Visa Cases" },
-    { href: "/visa/new", label: "Open Visa Case" },
+    { href: "/visa", label: "My Visa Applications" },
+    { href: "/visa/new", label: "Start Visa Application" },
     { href: "/work-items", label: "Work Items" },
   ],
   MANAGER: [
@@ -40,6 +40,7 @@ export const NAV_BY_ROLE: Record<Role, NavItem[]> = {
     { href: "/admin", label: "Users" },
     { href: "/admin/branches", label: "Branches" },
     { href: "/admin/countries", label: "Countries & Routes" },
+    { href: "/admin/intakes", label: "Intakes & Deadlines" },
     { href: "/admin/templates", label: "Requirement Templates" },
   ],
 };

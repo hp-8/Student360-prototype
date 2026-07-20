@@ -14,6 +14,7 @@ import {
 } from "@/components/ui";
 import { statusColor, humanize } from "@/lib/statusColors";
 import { staffName, studentName } from "@/lib/displayName";
+import { BackLink } from "@/components/BackLink";
 import {
   updateAttemptAction,
   reopenAttemptAction,
@@ -86,8 +87,9 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
 
   return (
     <div className="flex flex-col gap-6">
+      <BackLink fallbackHref={`/students/${visaCase.studentId}`} />
       <PageHeader
-        title={`${visaCase.country.name} visa case`}
+        title={`${visaCase.country.name} visa application`}
         description={
           <>
             {visaCase.visaRoute.name} · student:{" "}
@@ -301,7 +303,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
                 </Field>
                 <div className="col-span-3">
                   <Button type="submit" variant="danger">
-                    Close visa case
+                    Close visa application
                   </Button>
                 </div>
               </form>
