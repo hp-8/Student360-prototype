@@ -17,13 +17,22 @@ export type TimelineEntry = {
   kind: TimelineKind;
   tone?: "positive" | "negative" | "neutral" | "upcoming";
   href?: string;
+  // Groups this entry onto its own branch (e.g. a study option id). Entries
+  // without a laneKey render on the trunk (lane 0).
+  laneKey?: string;
+  // For a trunk entry where side branches rejoin (e.g. country confirmed),
+  // the laneKeys of the branches merging back in here.
+  mergesLaneKeys?: string[];
 };
+
+export type LanedTimelineEntry = TimelineEntry & { lane: number; mergesLanes?: number[] };
 
 type TimelineStudent = {
   enquiryDate: Date;
   createdAt: Date;
   studyOptions: {
     id: string;
+    countryId: string;
     universityName: string;
     courseName: string;
     createdAt: Date;
@@ -33,6 +42,7 @@ type TimelineStudent = {
     }[];
   }[];
   countryConfirmations: {
+    countryId: string;
     country: { name: string };
     confirmedAt: Date;
     releasedAt: Date | null;
@@ -66,7 +76,7 @@ const EVENT_LABEL: Record<string, string> = {
   NOTE: "Note logged",
 };
 
-export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] {
+export function buildStudentTimeline(student: TimelineStudent): LanedTimelineEntry[] {
   const entries: TimelineEntry[] = [];
 
   entries.push({ date: student.enquiryDate, label: "Enquiry received", kind: "enquiry" });
@@ -82,6 +92,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
       description: so.courseName,
       kind: "study",
       href: `/study-options/${so.id}`,
+      laneKey: so.id,
     });
     for (const app of so.applications) {
       if (app.offer) {
@@ -91,6 +102,7 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
           description: app.offer.status.replaceAll("_", " "),
           kind: "offer",
           href: `/study-options/${so.id}`,
+          laneKey: so.id,
         });
       }
     }
@@ -103,15 +115,22 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
         kind: "deadline",
         tone: "upcoming",
         href: `/study-options/${so.id}`,
+        // Deliberately not laneKey'd to this study option: it's a forward-looking
+        // reminder, not branch history, so it renders on the trunk even if the
+        // branch itself has already merged in by now.
       });
     }
   }
 
   for (const cc of student.countryConfirmations) {
+    const mergingStudyOptionIds = student.studyOptions
+      .filter((so) => so.countryId === cc.countryId)
+      .map((so) => so.id);
     entries.push({
       date: cc.confirmedAt,
       label: `Country confirmed — ${cc.country.name}`,
       kind: "country",
+      mergesLaneKeys: mergingStudyOptionIds.length > 0 ? mergingStudyOptionIds : undefined,
     });
     if (cc.releasedAt) {
       entries.push({
@@ -163,5 +182,28 @@ export function buildStudentTimeline(student: TimelineStudent): TimelineEntry[] 
     }
   }
 
-  return entries.sort((a, b) => a.date.getTime() - b.date.getTime());
+  return assignLanes(entries.sort((a, b) => a.date.getTime() - b.date.getTime()));
+}
+
+// Lays entries out onto a trunk (lane 0) plus one branch lane per distinct
+// laneKey, in first-seen (chronological) order — the data needed to draw a
+// git-graph-style view where study options fork off the trunk and rejoin it
+// when their country gets confirmed.
+function assignLanes(entries: TimelineEntry[]): LanedTimelineEntry[] {
+  const laneOf = new Map<string, number>();
+  let nextLane = 1;
+
+  return entries.map((entry) => {
+    let lane = 0;
+    if (entry.laneKey) {
+      if (!laneOf.has(entry.laneKey)) laneOf.set(entry.laneKey, nextLane++);
+      lane = laneOf.get(entry.laneKey)!;
+    }
+
+    const mergesLanes = entry.mergesLaneKeys
+      ?.map((key) => laneOf.get(key))
+      .filter((l): l is number => typeof l === "number" && l !== 0);
+
+    return { ...entry, lane, mergesLanes: mergesLanes && mergesLanes.length > 0 ? mergesLanes : undefined };
+  });
 }

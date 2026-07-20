@@ -20,15 +20,12 @@ export default async function LeadDetailPage({
   });
   if (!lead) notFound();
 
-  const [counsellors, duplicates] = await Promise.all([
-    prisma.user.findMany({ where: { roles: { has: "COUNSELLOR" }, active: true } }),
-    findDuplicateStudents({
-      firstName: lead.firstName,
-      lastName: lead.lastName,
-      phone: lead.phone,
-      email: lead.email,
-    }),
-  ]);
+  const duplicates = await findDuplicateStudents({
+    firstName: lead.firstName,
+    lastName: lead.lastName,
+    phone: lead.phone,
+    email: lead.email,
+  });
 
   return (
     <div className="max-w-2xl">
@@ -100,18 +97,11 @@ export default async function LeadDetailPage({
 
       <Card className="p-4 mb-6">
         <SectionTitle>Convert to student</SectionTitle>
+        <p className="text-sm text-[var(--ink-soft)] mb-4">
+          A manager will assign a case manager once this profile is created.
+        </p>
         <form action={convertAction} className="flex flex-col gap-4">
           <input type="hidden" name="leadId" value={lead.id} />
-          <Field label="Assign case manager">
-            <select name="caseManagerId" required className={inputClass}>
-              <option value="">Select counsellor</option>
-              {counsellors.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {staffName(c)}
-                </option>
-              ))}
-            </select>
-          </Field>
           <Field label="Consent notes">
             <textarea
               name="consentNotes"

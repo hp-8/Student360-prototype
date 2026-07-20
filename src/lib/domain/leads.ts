@@ -88,7 +88,7 @@ export async function convertLeadToStudent(
     guardianRelation?: string | null;
     consentNotes?: string | null;
   },
-  caseManagerId: string,
+  caseManagerId: string | null,
   byUserId: string
 ) {
   const lead = await prisma.lead.findUniqueOrThrow({ where: { id: leadId } });
@@ -122,14 +122,16 @@ export async function convertLeadToStudent(
       },
     });
 
-    await tx.caseAssignment.create({
-      data: {
-        studentId: student.id,
-        staffId: caseManagerId,
-        assignedById: byUserId,
-        note: "Initial case manager assignment on conversion from enquiry.",
-      },
-    });
+    if (caseManagerId) {
+      await tx.caseAssignment.create({
+        data: {
+          studentId: student.id,
+          staffId: caseManagerId,
+          assignedById: byUserId,
+          note: "Initial case manager assignment on conversion from enquiry.",
+        },
+      });
+    }
 
     await tx.lead.update({
       where: { id: leadId },

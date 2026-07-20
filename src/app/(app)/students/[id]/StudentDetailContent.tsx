@@ -12,7 +12,7 @@ import {
   Button,
 } from "@/components/ui";
 import { Tabs } from "@/components/Tabs";
-import { Timeline } from "@/components/Timeline";
+import { JourneyGraph } from "@/components/JourneyGraph";
 import { BackLink } from "@/components/BackLink";
 import { IntakePicker } from "@/components/IntakePicker";
 import { statusColor, humanize } from "@/lib/statusColors";
@@ -100,6 +100,15 @@ export async function StudentDetailContent({ id }: { id: string }) {
     student.countryConfirmations.filter((c) => !c.releasedAt).map((c) => c.countryId)
   );
 
+  const targetIntakes = Array.from(
+    new Map(
+      student.studyOptions.map((so) => [
+        `${so.countryId}::${so.intake}`,
+        `${so.intake} (${so.country.name})`,
+      ])
+    ).values()
+  );
+
   const canSeeSystemActivity = await hasCaseAccess(session, student.id);
   const auditLogs = canSeeSystemActivity
     ? await prisma.auditLog.findMany({
@@ -131,7 +140,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
   const timelineTab = (
     <Card className="p-5">
       <SectionTitle>Journey</SectionTitle>
-      <Timeline entries={timelineEntries} />
+      <JourneyGraph entries={timelineEntries} />
     </Card>
   );
 
@@ -139,10 +148,10 @@ export async function StudentDetailContent({ id }: { id: string }) {
     <>
       {canManageCaseManager && (
         <Card className="p-5">
-          <SectionTitle>Case manager</SectionTitle>
+          <SectionTitle>{student.currentCaseManager ? "Case manager" : "Assign case manager"}</SectionTitle>
           <form action={reassignCaseManagerAction} className="flex items-end gap-3">
             <input type="hidden" name="studentId" value={student.id} />
-            <Field label="Reassign to">
+            <Field label={student.currentCaseManager ? "Reassign to" : "Assign to"}>
               <select name="newStaffId" required className={inputClass}>
                 <option value="">Select counsellor</option>
                 {counsellors.map((c) => (
@@ -155,7 +164,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <Field label="Reason">
               <input name="note" className={inputClass} placeholder="e.g. Workload rebalancing" />
             </Field>
-            <Button type="submit">Reassign</Button>
+            <Button type="submit">{student.currentCaseManager ? "Reassign" : "Assign"}</Button>
           </form>
           <div className="mt-4">
             <p className="text-xs font-medium text-[var(--ink-soft)] mb-2">History</p>
@@ -250,58 +259,54 @@ export async function StudentDetailContent({ id }: { id: string }) {
 
   const studyOptionsTab = (
     <Card className="p-5">
-      <SectionTitle>Study options</SectionTitle>
-      {student.studyOptions.length === 0 ? (
-        <EmptyState>No study options yet.</EmptyState>
-      ) : (
-        <div className="flex flex-col gap-2 mb-4">
-          {student.studyOptions.map((so) => (
-            <Link
-              key={so.id}
-              href={`/study-options/${so.id}`}
-              className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-4 py-3 hover:bg-[var(--paper)]"
-            >
-              <div>
-                <p className="text-sm font-medium text-[var(--ink)]">
-                  {so.universityName} · {so.courseName}
-                </p>
-                <p className="text-xs text-[var(--ink-soft)]">
-                  {so.country.name} · {so.intake}
-                  {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
-                </p>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge color={statusColor(so.status)}>{humanize(so.status)}</Badge>
-                <Badge color={so.applications.some((a) => a.offer) ? "green" : "slate"}>
-                  {so.applications.length} application{so.applications.length === 1 ? "" : "s"}
-                </Badge>
-              </div>
-            </Link>
-          ))}
-        </div>
-      )}
-      {canEditStudyOptions && (
-        <details className="mt-2">
-          <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
-            + Add a new study option
-          </summary>
-          <form action={createStudyOptionAction} className="grid grid-cols-2 gap-3 mt-3">
-            <input type="hidden" name="studentId" value={student.id} />
-            <IntakePicker countries={countries} intakes={intakes} />
-            <Field label="University">
-              <input name="universityName" required className={inputClass} />
-            </Field>
-            <Field label="Course">
-              <input name="courseName" required className={inputClass} />
-            </Field>
-            <div className="col-span-2">
-              <Button type="submit" variant="secondary">
-                Add study option
-              </Button>
+      <details>
+        <summary className="text-sm font-semibold text-[var(--ink)] cursor-pointer">
+          Study options ({student.studyOptions.length})
+        </summary>
+        <div className="mt-3.5">
+          {student.studyOptions.length === 0 ? (
+            <EmptyState>No study options yet.</EmptyState>
+          ) : (
+            <div className="flex flex-col gap-2 mb-4">
+              {student.studyOptions.map((so) => (
+                <Link
+                  key={so.id}
+                  href={`/study-options/${so.id}`}
+                  className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-3 py-2 hover:bg-[var(--paper)]"
+                >
+                  <span className="text-sm font-medium text-[var(--ink)]">{so.universityName}</span>
+                  <span className="text-xs text-[var(--ink-soft)]">
+                    {so.country.name} · {so.intake}
+                    {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
+                  </span>
+                </Link>
+              ))}
             </div>
-          </form>
-        </details>
-      )}
+          )}
+          {canEditStudyOptions && (
+            <details className="mt-2">
+              <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">
+                + Add a new study option
+              </summary>
+              <form action={createStudyOptionAction} className="grid grid-cols-2 gap-3 mt-3">
+                <input type="hidden" name="studentId" value={student.id} />
+                <IntakePicker countries={countries} intakes={intakes} />
+                <Field label="University">
+                  <input name="universityName" required className={inputClass} />
+                </Field>
+                <Field label="Course">
+                  <input name="courseName" required className={inputClass} />
+                </Field>
+                <div className="col-span-2">
+                  <Button type="submit" variant="secondary">
+                    Add study option
+                  </Button>
+                </div>
+              </form>
+            </details>
+          )}
+        </div>
+      </details>
     </Card>
   );
 
@@ -524,6 +529,10 @@ export async function StudentDetailContent({ id }: { id: string }) {
         </div>
         <dl className="grid grid-cols-3 gap-4 mt-4 text-sm">
           <div>
+            <dt className="text-[var(--ink-soft)]">Case manager</dt>
+            <dd>{student.currentCaseManager ? staffName(student.currentCaseManager) : "Unassigned"}</dd>
+          </div>
+          <div>
             <dt className="text-[var(--ink-soft)]">Phone</dt>
             <dd>{student.phone}</dd>
           </div>
@@ -557,6 +566,22 @@ export async function StudentDetailContent({ id }: { id: string }) {
           <div>
             <dt className="text-[var(--ink-soft)]">Country intended</dt>
             <dd>{student.intendedCountry?.name ?? "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-[var(--ink-soft)]">Target intake(s)</dt>
+            <dd>
+              {targetIntakes.length === 0 ? (
+                "—"
+              ) : (
+                <div className="flex flex-wrap gap-1 mt-0.5">
+                  {targetIntakes.map((t) => (
+                    <Badge key={t} color="blue">
+                      {t}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </dd>
           </div>
           <div>
             <dt className="text-[var(--ink-soft)]">IELTS</dt>
