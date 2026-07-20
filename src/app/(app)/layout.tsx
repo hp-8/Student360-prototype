@@ -1,5 +1,5 @@
 import { requireUser } from "@/lib/auth/session";
-import { AppHeader } from "@/components/AppHeader";
+import { Sidebar } from "@/components/Sidebar";
 
 export default async function AppLayout({
   children,
@@ -11,10 +11,10 @@ export default async function AppLayout({
   const session = await requireUser();
 
   return (
-    <div className="flex flex-col h-screen overflow-hidden">
-      <AppHeader session={session} />
-      <main className="flex-1 min-h-0 max-w-6xl w-full mx-auto px-4 py-5 overflow-y-auto">
-        {children}
+    <div className="flex h-screen overflow-hidden">
+      <Sidebar session={session} />
+      <main className="flex-1 min-h-0 overflow-y-auto px-8 py-6">
+        <div className="max-w-6xl mx-auto">{children}</div>
       </main>
       {modal}
     </div>

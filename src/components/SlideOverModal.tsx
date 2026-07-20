@@ -29,7 +29,7 @@ export function SlideOverModal({ children }: { children: React.ReactNode }) {
         <button
           onClick={() => router.back()}
           aria-label="Close panel"
-          className="sticky top-4 float-right mr-4 z-10 flex items-center justify-center w-8 h-8 rounded-[3px] bg-[var(--card)] border border-[var(--paper-line)] text-[var(--ink-soft)] hover:text-[var(--navy)] hover:border-[var(--navy)]/30 shadow-sm"
+          className="sticky top-4 float-right mr-4 z-10 flex items-center justify-center w-8 h-8 rounded-full bg-[var(--card)] border border-[var(--paper-line)] text-[var(--ink-soft)] hover:text-[var(--navy)] hover:border-[var(--navy)]/30 shadow-sm"
         >
           ✕
         </button>

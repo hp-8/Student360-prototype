@@ -212,7 +212,7 @@ export async function VisaCaseDetailContent({ id }: { id: string }) {
           {visaCase.attempts.map((attempt) => (
             <div key={attempt.id} className="border border-[var(--paper-line)] rounded-md p-4">
               <div className="flex items-center justify-between mb-3">
-                <p className="font-mono text-sm font-semibold text-[var(--ink)]">
+                <p className="text-sm font-semibold text-[var(--ink)]">
                   Attempt {attempt.attemptNumber}
                 </p>
                 <Badge color={statusColor(attempt.status)}>{humanize(attempt.status)}</Badge>

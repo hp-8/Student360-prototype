@@ -17,7 +17,7 @@ export function RoleSwitcher({
         name="role"
         defaultValue={activeRole}
         onChange={(e) => e.currentTarget.form?.requestSubmit()}
-        className="text-sm text-[var(--brass)] bg-transparent border border-[var(--paper-line)] rounded-md px-2 py-1 focus:outline-none"
+        className="w-full text-xs text-[var(--ink-soft)] bg-[var(--paper)] border border-[var(--paper-line)] rounded-lg px-2.5 py-1.5 focus:outline-none"
       >
         {roles.map((r) => (
           <option key={r} value={r}>

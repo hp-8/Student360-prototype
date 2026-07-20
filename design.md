@@ -1,128 +1,74 @@
 # Design — Student360
 
-A locked design system for this app. Every future page or component redesign
-reads this file before emitting code. Do not regenerate per page — extend or
-amend this file when the system needs to grow.
+A locked design system for this app. Read this before touching visual code.
 
-## Genre
+## Direction
 
-Editorial, adapted for an internal tool. Student360 has no marketing pages —
-every screen is an authenticated app page used all day by staff, so the
-Hallmark macrostructure/nav/footer catalog (built for landing pages) does not
-apply. There is one page-type family: **App pages**.
+Clean, professional, modern SaaS dashboard — modeled directly on a reference
+screenshot the user supplied (a project-management tool: left sidebar nav,
+white cards on a light gray canvas, soft shadows, rounded corners, pill status
+badges with a colored dot, segmented/linear progress bars, one clean sans
+typeface throughout). No serif, no monospace accents, no "ledger/stamp"
+motifs — those belonged to an earlier direction and have been fully replaced.
 
-## Concept — "Dossier"
+## Layout
 
-A visa-consultancy caseworker's dossier: warm ivory paper, deep ink-navy,
-a single brass accent, oxblood reserved for refusals/urgent items. Reference
-numbers and counts render in monospace, like a ledger. Tables read as ruled
-ledger sheets (hairlines, no cell borders, no zebra striping). Status badges
-are small rectangular stamps, not pills — uppercase, tracked, monospace.
-
-## App pages — macrostructure family
-
-No hero, no marketing sections. Every screen follows the same shape:
-- Fixed app shell (`AppHeader` stays put; only the content region scrolls).
-- `PageHeader` (title + one-line description) at the top of each page.
-- Content organized into `Card` sections, or `Tabs` when a single entity
-  (Student / Study Option / Visa Case) has more than ~3 logical groupings.
-- Tables are ledger-style: hairline row dividers, monospace uppercase column
-  heads, no card-in-card, no borders-on-every-cell.
-- Detail panels (Student, Study Option, Visa Case) render as slide-over
-  panels via intercepting routes, with a full-page fallback at the same URL.
-
-Enrichment: **none**. Function carries every page; no decorative imagery,
-no hero art, no illustration.
-
-## Theme — "Dossier" (custom OKLCH palette)
-
-```css
---paper:       oklch(96% 0.014 80);   /* page background, warm ivory */
---paper-2:     oklch(99% 0.006 85);   /* card surface */
---paper-line:  oklch(87% 0.02 75);    /* hairline rule */
---ink:         oklch(24% 0.045 262);  /* primary text, deep ink-navy */
---ink-soft:    oklch(46% 0.03 258);   /* secondary text */
---navy:        oklch(30% 0.07 260);   /* primary action */
---navy-deep:   oklch(20% 0.06 262);   /* primary action, hover */
---brass:       oklch(56% 0.12 75);    /* the one warm accent */
---brass-soft:  oklch(80% 0.07 80);
---oxblood:     oklch(38% 0.13 25);    /* refused / urgent / danger */
---oxblood-soft: oklch(90% 0.045 30);
---focus-ring:  oklch(62% 0.16 75);
-```
-
-Six semantic status slots (slate/green/red/amber/blue/purple, unchanged API
-in `Badge`) are retinted to sit inside this palette rather than a generic
-rainbow — see `globals.css` `--status-*` tokens.
+- Persistent left sidebar (`src/components/Sidebar.tsx`): wordmark, role-based
+  nav with `lucide-react` line icons, user profile + role switcher + logout
+  pinned at the bottom. Replaces the old top app-bar entirely.
+- Content area: light gray page background, `max-w-6xl` centered column,
+  scrolls independently of the sidebar (fixed viewport shell).
+- Detail panels (Student / Study Option / Visa Case) still render as
+  slide-over panels via intercepting routes.
 
 ## Typography
 
-- Display: **Fraunces**, weight 500/600, roman only (no italic headers).
-- Body: **IBM Plex Sans**, weight 400/500/600.
-- Outlier (monospace): **JetBrains Mono** — used only for: table column
-  heads, KPI/stat figures, visa attempt numbers ("Attempt 2"), and status
-  badge text. This is a functional register (aligns numbers, reads as a
-  ledger), not decoration — it does not appear in prose or button labels.
+Single family: **Inter** (`next/font/google`, `src/app/fonts.ts`), weights
+400–700, exposed as `--font-sans`. Headings are the same family at 600
+weight, not a separate display face.
 
-Loaded via `next/font/google` in `src/app/fonts.ts`, exposed as
-`--font-display` / `--font-body` / `--font-mono` on `<html>`.
+## Color tokens (`src/app/globals.css`)
 
-## Spacing
-
-Existing Tailwind default scale, used consistently (`gap-3` / `gap-4` /
-`gap-5` / `gap-6`, `p-4` / `p-5`). No new spacing tokens introduced — the
-redesign is a token/voice change, not a layout-density change (a separate
-pass already reduced page-level scrolling).
-
-## Motion
-
-- Easing: `--ease-out: cubic-bezier(0.16, 1, 0.3, 1)`, `--dur-short: 160ms`,
-  `--dur-med: 240ms`.
-- Reveal pattern: none — app pages don't scroll-reveal. Only stateful
-  transitions (modal slide-in, tab switch, row hover) animate.
-- `prefers-reduced-motion: reduce` collapses all transitions/animations to
-  near-zero duration.
-
-## Microinteractions stance
-
-- Silent success on form submits (revalidated data is the confirmation; no
-  toasts).
-- `:focus-visible` always shows an instant brass ring — never animated in.
-- Table rows get a quiet background transition on hover only.
+- `--paper` — light gray page background · `--card` / `--paper-2` — white
+  card surface · `--paper-line` — hairline border.
+- `--ink` / `--ink-soft` / `--ink-faint` — neutral gray text scale.
+- `--navy` / `--navy-deep` — primary accent (vivid indigo-blue): primary
+  buttons, links, active states.
+- `--brass` / `--brass-soft` / `--brass-ink` — secondary warm accent (orange).
+- `--oxblood` — danger/red accent.
+- `--status-{slate,green,red,amber,blue,purple}-{bg,fg}` — the six semantic
+  status pairs used by `Badge`, retinted to saturated, modern pill colors.
+- `--shadow-card` / `--shadow-card-hover` — the soft shadow every `Card` uses.
 
 ## Component voice
 
-- **Card**: `--paper-2` surface, hairline `--paper-line` border, no shadow
-  beyond a 1px ambient shadow. No nested cards.
-- **Badge**: small rectangular "stamp" — `rounded-[3px]`, monospace
-  uppercase text, tracked out, thin border in the status colour, tinted
-  background. Not a pill.
-- **Button**: primary = solid navy; secondary = paper surface + hairline
-  border; danger = oxblood. Rounded corners match Card (`rounded-md`), never
-  pill-shaped.
-- **Table**: hairline row dividers only, monospace uppercase column heads in
-  brass-ink, no zebra striping, no per-cell borders.
-- **Tabs**: sticky underline tabs, brass-ink active state.
+- **Card**: white surface, `rounded-2xl`, soft shadow, hairline border. No
+  nested cards.
+- **Badge**: pill (`rounded-full`), soft tinted background, a small colored
+  dot before the label. Not a stamp, not monospace, not uppercase.
+- **Button**: `rounded-lg`, solid navy primary / bordered white secondary /
+  solid red danger.
+- **Avatar** (`ui.tsx`): circular initials badge, used for staff/assignee
+  representation.
+- **Table**: plain sans column heads (gray, medium weight, normal case, no
+  mono), hairline row dividers, subtle hover — set globally in `globals.css`
+  so per-page table markup doesn't need repeating.
+- **SegmentedBar** / **ProgressMeter** (`src/components/`): the two chart
+  primitives for dashboard cards — a single proportional multi-color bar
+  with a legend (e.g. students-by-stage), and a labeled linear fill meter
+  with a percentage (e.g. approval rate). Never fabricate a trend/delta
+  figure (no invented "+12% vs last month") — only render numbers computed
+  from real data, with a plain caption instead of a fake comparison when
+  there's no historical baseline to compare against.
+
+## Motion
+
+Minimal: card-hover shadow transition, tab underline transition, modal
+slide-in. `prefers-reduced-motion: reduce` collapses all of it.
 
 ## What every page must share
 
-- The palette and status-colour retinting above.
-- The Fraunces/IBM Plex Sans/JetBrains Mono pairing and the outlier's scope
-  (numbers/labels only, never prose).
-- The Card / Badge / Button / Table voice in this file.
-- The fixed app-shell shell (header pinned, content scrolls).
-
-## What pages may differ on
-
-- Card layout (grid vs. stacked vs. tabs) per the page's own information
-  density needs.
-- Whether a page uses `Tabs` at all (only entities with several logical
-  groupings do).
-
-## Exports
-
-### tokens.css
-
-See `src/app/globals.css` `:root` block — that file is the live token
-source for this project; a separate `tokens.css` was not split out since
-there is only one theme and one consumer (this app).
+The token set above, the Card/Badge/Button/Avatar voice, and the sidebar
+shell. Dashboard-style pages (Pipeline, Workload) use SegmentedBar/
+ProgressMeter for aggregate visuals; list/detail pages stay table- or
+panel-based.

@@ -26,7 +26,7 @@ export function Timeline({ entries }: { entries: TimelineEntry[] }) {
             <span
               className={`absolute -left-5 top-1 w-[11px] h-[11px] rounded-full border-2 border-[var(--paper)] ${DOT_COLOR[tone]}`}
             />
-            <p className="font-mono text-[0.6875rem] text-[var(--ink-faint)] uppercase tracking-wide">
+            <p className="text-xs text-[var(--ink-faint)] font-medium">
               {entry.date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" })}
             </p>
             {entry.href ? (

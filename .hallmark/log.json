@@ -1,5 +1,15 @@
 [
   {
+    "date": "2026-07-20",
+    "scope": "app",
+    "macrostructure": "n/a (internal app pages, no marketing macrostructure)",
+    "theme": "studied-DNA",
+    "theme_axes": "light (paper near-white) / grotesk-sans display (Inter) / cool accent (indigo-blue)",
+    "vibe": "clean professional SaaS dashboard, sidebar nav, soft-shadow cards, pill badges",
+    "enrichment": "none",
+    "brief": "Student360 · superseded the Dossier ledger theme; rebuilt to match a user-supplied reference screenshot (project-management dashboard: sidebar, white cards, progress bars)"
+  },
+  {
     "date": "2026-07-19",
     "scope": "app",
     "macrostructure": "n/a (internal app pages, no marketing macrostructure)",
@@ -7,6 +17,6 @@
     "theme_axes": "light (paper oklch 96%) / classical-serif display (Fraunces) / warm accent (brass, oklch hue 75)",
     "vibe": "visa-consultancy casework dossier / ledger",
     "enrichment": "none",
-    "brief": "Student360 · whole-app redesign away from generic 'mechanic' editorial-lite look"
+    "brief": "Student360 · whole-app redesign away from generic 'mechanic' editorial-lite look (superseded)"
   }
 ]

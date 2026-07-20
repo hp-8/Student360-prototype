@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { fraunces, plexSans, jetbrainsMono } from "./fonts";
+import { inter } from "./fonts";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,10 +13,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      className={`h-full antialiased ${fraunces.variable} ${plexSans.variable} ${jetbrainsMono.variable}`}
-    >
+    <html lang="en" className={`h-full antialiased ${inter.variable}`}>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

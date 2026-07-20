@@ -99,7 +99,7 @@ export default async function AssignmentExplorerPage() {
                       </div>
                     )}
                   </td>
-                  <td className="px-4 py-2.5 font-mono text-[var(--ink)]">
+                  <td className="px-4 py-2.5 text-[var(--ink)]">
                     <Link href={`/work-items?studentId=${s.id}&filter=assigned`} className="hover:underline">
                       {counts.assigned}
                     </Link>
@@ -110,7 +110,7 @@ export default async function AssignmentExplorerPage() {
                         <Badge color="red">{counts.overdue}</Badge>
                       </Link>
                     ) : (
-                      <span className="font-mono text-[var(--ink-soft)]">0</span>
+                      <span className="text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -119,7 +119,7 @@ export default async function AssignmentExplorerPage() {
                         <Badge color="amber">{counts.blocked}</Badge>
                       </Link>
                     ) : (
-                      <span className="font-mono text-[var(--ink-soft)]">0</span>
+                      <span className="text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">
@@ -128,7 +128,7 @@ export default async function AssignmentExplorerPage() {
                         <Badge color="amber">{unassignedCount}</Badge>
                       </Link>
                     ) : (
-                      <span className="font-mono text-[var(--ink-soft)]">0</span>
+                      <span className="text-[var(--ink-soft)]">0</span>
                     )}
                   </td>
                   <td className="px-4 py-2.5">

@@ -28,7 +28,7 @@ export function NewEnquiryForm({
       <input type="hidden" name="confirmed" value={override ? "true" : "false"} />
       <input type="hidden" name="ieltsAttempted" value={ieltsAttempted ? "true" : "false"} />
 
-      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide -mb-2">
+      <p className="text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide -mb-2">
         Student
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -56,7 +56,7 @@ export function NewEnquiryForm({
         </Field>
       </div>
 
-      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide mt-2 -mb-2">
+      <p className="text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mt-2 -mb-2">
         Academic background
       </p>
       <div className="grid grid-cols-2 gap-4">
@@ -120,7 +120,7 @@ export function NewEnquiryForm({
         </div>
       </div>
 
-      <p className="font-mono text-[0.6875rem] font-semibold text-[var(--brass-ink)] uppercase tracking-wide mt-2 -mb-2">
+      <p className="text-xs font-semibold text-[var(--ink-soft)] uppercase tracking-wide mt-2 -mb-2">
         Enquiry details
       </p>
       <div className="grid grid-cols-2 gap-4">

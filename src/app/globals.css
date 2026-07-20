@@ -1,50 +1,53 @@
-/* Hallmark · genre: editorial · macrostructure: n/a (internal app, no marketing pages) · theme: custom "Dossier" · design-system: design.md · designed-as-app */
 @import "tailwindcss";
 
 :root {
   /* Surfaces */
-  --paper: oklch(96% 0.014 80);
-  --paper-2: oklch(99% 0.006 85);
-  --paper-line: oklch(87% 0.02 75);
-  --paper-line-soft: oklch(91.5% 0.015 78);
+  --paper: oklch(97.3% 0.003 260);
+  --paper-2: oklch(100% 0 0);
+  --paper-line: oklch(92% 0.006 260);
+  --paper-line-soft: oklch(94.5% 0.005 260);
   --card: var(--paper-2);
 
   /* Ink */
-  --ink: oklch(24% 0.045 262);
-  --ink-soft: oklch(46% 0.03 258);
-  --ink-faint: oklch(64% 0.018 258);
+  --ink: oklch(22% 0.02 262);
+  --ink-soft: oklch(52% 0.015 260);
+  --ink-faint: oklch(68% 0.012 260);
 
-  /* Navy — primary action */
-  --navy: oklch(30% 0.07 260);
-  --navy-deep: oklch(20% 0.06 262);
+  /* Primary accent — vivid indigo-blue */
+  --navy: oklch(56% 0.19 265);
+  --navy-deep: oklch(46% 0.19 265);
 
-  /* Brass — accent, the single warm highlight */
-  --brass: oklch(56% 0.12 75);
-  --brass-soft: oklch(80% 0.07 80);
-  --brass-ink: oklch(38% 0.1 72);
+  /* Secondary accent — warm orange */
+  --brass: oklch(72% 0.15 55);
+  --brass-soft: oklch(90% 0.06 60);
+  --brass-ink: oklch(52% 0.15 50);
 
-  /* Oxblood — the single cool-off / urgent register */
-  --oxblood: oklch(38% 0.13 25);
-  --oxblood-soft: oklch(90% 0.045 30);
+  /* Danger accent — clean red */
+  --oxblood: oklch(58% 0.2 25);
+  --oxblood-soft: oklch(94% 0.04 25);
 
-  /* Status hues — retinted to the Dossier anchor, not a rainbow */
-  --status-slate-bg: oklch(94% 0.008 258);
-  --status-slate-fg: oklch(42% 0.025 258);
-  --status-green-bg: oklch(93% 0.045 155);
-  --status-green-fg: oklch(42% 0.09 155);
+  /* Status hues — saturated modern pill-badge palette */
+  --status-slate-bg: oklch(95% 0.005 260);
+  --status-slate-fg: oklch(45% 0.015 260);
+  --status-green-bg: oklch(94% 0.06 150);
+  --status-green-fg: oklch(50% 0.14 150);
   --status-red-bg: var(--oxblood-soft);
   --status-red-fg: var(--oxblood);
-  --status-amber-bg: oklch(93% 0.05 82);
-  --status-amber-fg: oklch(45% 0.1 70);
-  --status-blue-bg: oklch(93% 0.03 250);
-  --status-blue-fg: oklch(40% 0.09 252);
-  --status-purple-bg: oklch(93% 0.03 320);
-  --status-purple-fg: oklch(42% 0.09 318);
+  --status-amber-bg: oklch(94% 0.07 70);
+  --status-amber-fg: oklch(52% 0.14 55);
+  --status-blue-bg: oklch(94% 0.045 265);
+  --status-blue-fg: oklch(52% 0.17 265);
+  --status-purple-bg: oklch(94% 0.045 300);
+  --status-purple-fg: oklch(52% 0.15 300);
 
-  --focus-ring: oklch(62% 0.16 75);
+  --focus-ring: oklch(56% 0.19 265);
 
   --background: var(--paper);
   --foreground: var(--ink);
+
+  /* Shadows */
+  --shadow-card: 0 1px 2px oklch(20% 0.02 260 / 4%), 0 1px 3px oklch(20% 0.02 260 / 6%);
+  --shadow-card-hover: 0 2px 4px oklch(20% 0.02 260 / 6%), 0 4px 10px oklch(20% 0.02 260 / 8%);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
@@ -68,11 +71,7 @@ html {
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
-  background-image:
-    radial-gradient(circle at 100% 0%, oklch(30% 0.07 260 / 4%), transparent 55%),
-    radial-gradient(circle at 0% 100%, oklch(56% 0.12 75 / 6%), transparent 45%);
-  background-attachment: fixed;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   overflow-x: clip;
 }
 
@@ -80,23 +79,15 @@ h1,
 h2,
 h3,
 .font-display {
-  font-family: var(--font-display), ui-serif, Georgia, serif;
-  font-style: normal;
-  letter-spacing: -0.01em;
-}
-
-.font-mono {
-  font-family: var(--font-mono), ui-monospace, "SFMono-Regular", monospace;
-}
-
-/* Ledger table voice — applies app-wide without per-page markup changes */
-table thead th {
-  font-family: var(--font-mono), ui-monospace, monospace;
-  font-size: 0.6875rem;
+  font-family: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.015em;
   font-weight: 600;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--brass-ink);
+}
+
+table thead th {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-soft);
 }
 
 table tbody tr {

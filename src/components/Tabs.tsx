@@ -7,16 +7,16 @@ export function Tabs({ tabs }: { tabs: { label: string; content: ReactNode }[] }
 
   return (
     <div>
-      <div className="flex gap-1 border-b border-[var(--paper-line)] mb-5 sticky top-16 bg-[var(--paper)] z-[1] -mx-1 px-1 overflow-x-auto">
+      <div className="flex gap-1 border-b border-[var(--paper-line)] mb-5 sticky top-0 bg-[var(--paper)] z-[1] -mx-1 px-1 overflow-x-auto">
         {tabs.map((t, i) => (
           <button
             key={t.label}
             type="button"
             onClick={() => setActive(i)}
-            className={`px-3 py-2 font-mono text-[0.7rem] font-semibold uppercase tracking-wide border-b-2 -mb-px whitespace-nowrap transition-colors duration-[160ms] ${
+            className={`px-3 py-2.5 text-sm font-medium border-b-2 -mb-px whitespace-nowrap transition-colors duration-[160ms] ${
               i === active
-                ? "border-[var(--brass)] text-[var(--brass-ink)]"
-                : "border-transparent text-[var(--ink-soft)] hover:text-[var(--navy)]"
+                ? "border-[var(--navy)] text-[var(--navy)]"
+                : "border-transparent text-[var(--ink-soft)] hover:text-[var(--ink)]"
             }`}
           >
             {t.label}

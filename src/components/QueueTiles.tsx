@@ -37,21 +37,19 @@ export function QueueTiles({
       {tiles.map((t) => {
         const content = (
           <>
-            <p className="font-mono text-[0.625rem] text-[var(--brass-ink)] uppercase tracking-wide font-semibold">
-              {t.label}
-            </p>
-            <span className={`font-mono font-semibold ${dense ? "text-lg" : "text-2xl"} ${t.color}`}>
+            <p className="text-xs text-[var(--ink-soft)] font-medium">{t.label}</p>
+            <span className={`font-semibold ${dense ? "text-lg" : "text-2xl"} ${t.color}`}>
               {t.value}
             </span>
           </>
         );
-        const className = `border border-[var(--paper-line)] rounded-md flex flex-col gap-1 ${dense ? "px-3 py-2" : "px-3 py-2.5"}`;
+        const className = `bg-[var(--paper)] rounded-xl flex flex-col gap-1 ${dense ? "px-3 py-2" : "px-3.5 py-3"}`;
 
         return baseHref ? (
           <Link
             key={t.label}
             href={withFilter(baseHref, FILTER_KEY[t.label])}
-            className={`${className} hover:border-[var(--brass-soft)] transition-colors`}
+            className={`${className} hover:bg-[var(--paper-line-soft)] transition-colors`}
           >
             {content}
           </Link>
