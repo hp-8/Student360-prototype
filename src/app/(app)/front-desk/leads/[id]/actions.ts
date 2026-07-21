@@ -20,9 +20,9 @@ export async function convertAction(formData: FormData) {
 }
 
 export async function markLostAction(formData: FormData) {
-  await requireRole("FRONT_DESK", "MANAGER");
+  const session = await requireRole("FRONT_DESK", "MANAGER");
   const leadId = String(formData.get("leadId"));
   const reason = String(formData.get("reason") ?? "").trim();
-  await markLeadLost(leadId, reason || "No reason given.");
+  await markLeadLost(leadId, reason || "No reason given.", session.id);
   redirect("/front-desk");
 }

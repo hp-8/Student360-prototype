@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { logActivity } from "@/lib/domain/audit";
+import { notifyUser } from "@/lib/domain/notifications";
+import { studentName } from "@/lib/displayName";
 
 export async function reassignCaseManager(
   studentId: string,
@@ -59,6 +61,14 @@ export async function reassignCaseManager(
       entityId: studentId,
     });
 
-    return tx.student.findUniqueOrThrow({ where: { id: studentId } });
+    const updated = await tx.student.findUniqueOrThrow({ where: { id: studentId } });
+    await notifyUser(tx, {
+      userId: newStaffId,
+      actorId: byUserId,
+      title: `You were assigned as case manager for ${studentName(updated)}`,
+      href: `/students/${studentId}`,
+    });
+
+    return updated;
   });
 }

@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import type { VisaAttemptStatus, VisaEventType } from "@prisma/client";
 import { releaseCountryConfirmation } from "./countryConfirmation";
 import { logActivity } from "@/lib/domain/audit";
+import { notifyUser } from "@/lib/domain/notifications";
 import { humanize } from "@/lib/statusColors";
 
 type ChecklistTemplateItem = {
@@ -80,6 +81,15 @@ export async function openVisaCase(params: {
       entityType: "VisaCase",
       entityId: visaCase.id,
     });
+
+    if (params.assignedToId) {
+      await notifyUser(tx, {
+        userId: params.assignedToId,
+        actorId: params.byUserId,
+        title: "You were assigned a new visa application",
+        href: `/visa/${visaCase.id}`,
+      });
+    }
 
     return visaCase;
   });
@@ -165,7 +175,9 @@ export async function updateVisaAttempt(params: {
         status: params.newStatus,
         decidedAt: decided ? new Date() : undefined,
       },
-      include: { visaCase: { select: { studentId: true } } },
+      include: {
+        visaCase: { select: { id: true, studentId: true, assignedToId: true, student: { select: { currentCaseManagerId: true } } } },
+      },
     });
 
     await tx.visaEvent.create({
@@ -185,6 +197,24 @@ export async function updateVisaAttempt(params: {
       entityType: "VisaAttempt",
       entityId: attempt.id,
     });
+
+    const vcHref = `/visa/${attempt.visaCase.id}`;
+    if (attempt.visaCase.assignedToId) {
+      await notifyUser(tx, {
+        userId: attempt.visaCase.assignedToId,
+        actorId: params.byUserId,
+        title: `Visa attempt status changed to ${humanize(params.newStatus)}`,
+        href: vcHref,
+      });
+    }
+    if ((params.newStatus === "APPROVED" || params.newStatus === "REFUSED") && attempt.visaCase.student.currentCaseManagerId) {
+      await notifyUser(tx, {
+        userId: attempt.visaCase.student.currentCaseManagerId,
+        actorId: params.byUserId,
+        title: `Visa ${params.newStatus === "APPROVED" ? "approved" : "refused"} for your student`,
+        href: vcHref,
+      });
+    }
 
     return attempt;
   });

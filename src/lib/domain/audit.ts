@@ -7,7 +7,8 @@ type Db = PrismaClient | Prisma.TransactionClient;
 export async function logActivity(
   db: Db,
   params: {
-    studentId: string;
+    studentId?: string;
+    leadId?: string;
     actorId: string;
     action: string;
     entityType: string;
@@ -17,6 +18,7 @@ export async function logActivity(
   await db.auditLog.create({
     data: {
       studentId: params.studentId,
+      leadId: params.leadId,
       actorId: params.actorId,
       action: params.action,
       entityType: params.entityType,

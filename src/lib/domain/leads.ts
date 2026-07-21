@@ -66,15 +66,35 @@ export type LeadIntakeFields = {
 };
 
 export async function createLead(data: LeadIntakeFields, createdById: string) {
-  return prisma.lead.create({
-    data: { ...data, createdById },
+  return prisma.$transaction(async (tx) => {
+    const lead = await tx.lead.create({
+      data: { ...data, createdById },
+    });
+    await logActivity(tx, {
+      leadId: lead.id,
+      actorId: createdById,
+      action: `New enquiry: ${lead.firstName} ${lead.lastName}`,
+      entityType: "Lead",
+      entityId: lead.id,
+    });
+    return lead;
   });
 }
 
-export async function markLeadLost(leadId: string, reason: string) {
-  return prisma.lead.update({
-    where: { id: leadId },
-    data: { status: "LOST", lostReason: reason },
+export async function markLeadLost(leadId: string, reason: string, byUserId: string) {
+  return prisma.$transaction(async (tx) => {
+    const lead = await tx.lead.update({
+      where: { id: leadId },
+      data: { status: "LOST", lostReason: reason },
+    });
+    await logActivity(tx, {
+      leadId: lead.id,
+      actorId: byUserId,
+      action: `Marked enquiry as lost: ${reason}`,
+      entityType: "Lead",
+      entityId: lead.id,
+    });
+    return lead;
   });
 }
 
@@ -144,6 +164,13 @@ export async function convertLeadToStudent(
       action: "Converted enquiry to student",
       entityType: "Student",
       entityId: student.id,
+    });
+    await logActivity(tx, {
+      leadId: lead.id,
+      actorId: byUserId,
+      action: "Converted to student profile",
+      entityType: "Lead",
+      entityId: lead.id,
     });
 
     return student;

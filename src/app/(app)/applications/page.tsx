@@ -22,7 +22,16 @@ export default async function ApplicationsHomePage() {
     <div>
       <PageHeader
         title="My study options"
-        description="Study options assigned to you for applications, SOP and offer management."
+        description={
+          <>
+            Study options assigned to you for applications, SOP and offer management — the cases you own. For the
+            step-by-step task checklist on each one (documents, SOP, offer follow-up), see{" "}
+            <Link href="/work-items" className="underline text-[var(--navy)]">
+              Work Items
+            </Link>
+            .
+          </>
+        }
       />
       <Card>
         {studyOptions.length === 0 ? (

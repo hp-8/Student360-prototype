@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { openVisaCaseAction } from "./actions";
 import { Field, inputClass, Button } from "@/components/ui";
+import { IntakePicker } from "@/components/IntakePicker";
 
 type StudentOpt = { id: string; name: string };
 type RouteOpt = { id: string; countryId: string; countryName: string; name: string };
@@ -14,18 +15,21 @@ type OfferOpt = {
   status: string;
 };
 type StaffOpt = { id: string; name: string };
+type IntakeOpt = { id: string; name: string; countryId: string };
 
 export function NewVisaCaseForm({
   students,
   routes,
   offers,
   visaStaff,
+  intakes,
   defaultStudentId,
 }: {
   students: StudentOpt[];
   routes: RouteOpt[];
   offers: OfferOpt[];
   visaStaff: StaffOpt[];
+  intakes: IntakeOpt[];
   defaultStudentId?: string;
 }) {
   const [studentId, setStudentId] = useState(defaultStudentId ?? "");
@@ -135,7 +139,7 @@ export function NewVisaCaseForm({
           <div className="grid grid-cols-2 gap-3">
             <input name="universityName" placeholder="University" required className={inputClass} />
             <input name="courseName" placeholder="Course" required className={inputClass} />
-            <input name="intake" placeholder="Intake, e.g. Fall 2026" required className={inputClass} />
+            <IntakePicker intakes={intakes} fixedCountryId={selectedRoute?.countryId ?? ""} />
             <select name="offerStatus" required className={inputClass}>
               <option value="UNCONDITIONAL">Unconditional</option>
               <option value="CONDITIONAL">Conditional</option>

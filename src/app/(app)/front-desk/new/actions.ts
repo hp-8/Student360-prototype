@@ -100,7 +100,7 @@ export async function newEnquiryAction(
     }
   }
 
-  await createLead(
+  const lead = await createLead(
     {
       firstName,
       lastName,
@@ -121,5 +121,7 @@ export async function newEnquiryAction(
     session.id
   );
 
-  redirect("/front-desk");
+  // Straight to this lead's own page - not the list - so converting it (or
+  // marking it lost) is the very next thing staff see, not a second lookup.
+  redirect(`/front-desk/leads/${lead.id}`);
 }

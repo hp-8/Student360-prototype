@@ -19,6 +19,7 @@ import { statusColor, humanize } from "@/lib/statusColors";
 import { getDirectReports } from "@/lib/domain/hierarchy";
 import { hasCaseAccess } from "@/lib/domain/audit";
 import { buildStudentTimeline } from "@/lib/domain/timeline";
+import { computeStudentStage, stageColor, nextStepFor } from "@/lib/domain/stage";
 import { staffName, studentName } from "@/lib/displayName";
 import {
   createStudyOptionAction,
@@ -27,7 +28,13 @@ import {
   addNoteAction,
   addDocumentAction,
   verifyDocumentAction,
+  upsertEnrollmentAction,
+  recordTestAttemptAction,
 } from "./actions";
+
+const LEARNING_SERVICES = ["IELTS", "GERMAN_CLASS", "FRENCH_CLASS", "SOP_ASSISTANCE", "INTERVIEW_PREP"];
+const ENROLLMENT_STATUSES = ["NOT_ENROLLED", "ENROLLED", "COMPLETED"];
+const TEST_TYPES = ["IELTS", "TOEFL", "PTE", "TCF", "GOETHE", "OTHER"];
 
 export async function StudentDetailContent({ id }: { id: string }) {
   const session = await requireRole(
@@ -74,12 +81,17 @@ export async function StudentDetailContent({ id }: { id: string }) {
         orderBy: { openedAt: "desc" },
       },
       documents: {
-        include: { uploadedBy: true, verifiedBy: true },
+        include: {
+          uploadedBy: true,
+          verifiedBy: true,
+          links: { include: { studyOption: true, visaCase: { include: { country: true } } } },
+        },
         orderBy: { uploadedAt: "desc" },
       },
       notes: { include: { author: true }, orderBy: { createdAt: "desc" } },
       learningEnrollments: true,
       testAttempts: { orderBy: { testDate: "desc" } },
+      originatingLead: { select: { id: true } },
     },
   });
   if (!student) notFound();
@@ -112,7 +124,9 @@ export async function StudentDetailContent({ id }: { id: string }) {
   const canSeeSystemActivity = await hasCaseAccess(session, student.id);
   const auditLogs = canSeeSystemActivity
     ? await prisma.auditLog.findMany({
-        where: { studentId: student.id },
+        where: student.originatingLead
+          ? { OR: [{ studentId: student.id }, { leadId: student.originatingLead.id }] }
+          : { studentId: student.id },
         include: { actor: true },
         orderBy: { createdAt: "desc" },
       })
@@ -135,6 +149,9 @@ export async function StudentDetailContent({ id }: { id: string }) {
       createdAt: a.createdAt,
     })),
   ].sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+
+  const stage = computeStudentStage(student);
+  const nextStep = nextStepFor(stage);
 
   const timelineEntries = buildStudentTimeline(student);
   const timelineTab = (
@@ -185,9 +202,12 @@ export async function StudentDetailContent({ id }: { id: string }) {
       <Card className="p-5">
         <SectionTitle>Confirmed routes</SectionTitle>
         {student.countryConfirmations.filter((c) => !c.releasedAt).length === 0 ? (
-          <EmptyState>No country route confirmed yet.</EmptyState>
+          <EmptyState>
+            No country confirmed yet — use &ldquo;Move forward with this country&rdquo; on a study option once
+            one is decided.
+          </EmptyState>
         ) : (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-2">
             {student.countryConfirmations
               .filter((c) => !c.releasedAt)
               .map((c) => (
@@ -196,27 +216,6 @@ export async function StudentDetailContent({ id }: { id: string }) {
                 </Badge>
               ))}
           </div>
-        )}
-        {canEditStudyOptions && (
-          <form action={confirmCountryAction} className="flex items-end gap-3">
-            <input type="hidden" name="studentId" value={student.id} />
-            <Field label="Confirm country/route">
-              <select name="countryId" required className={inputClass}>
-                <option value="">Select country</option>
-                {countries.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
-            </Field>
-            <Field label="Note">
-              <input name="note" className={inputClass} placeholder="Optional" />
-            </Field>
-            <Button type="submit" variant="secondary">
-              Confirm
-            </Button>
-          </form>
         )}
       </Card>
 
@@ -228,7 +227,7 @@ export async function StudentDetailContent({ id }: { id: string }) {
             {student.learningEnrollments.length === 0 ? (
               <EmptyState>None on file.</EmptyState>
             ) : (
-              <ul className="text-sm space-y-1">
+              <ul className="text-sm space-y-1 mb-3">
                 {student.learningEnrollments.map((e) => (
                   <li key={e.id} className="flex justify-between">
                     <span>{humanize(e.service)}</span>
@@ -237,19 +236,80 @@ export async function StudentDetailContent({ id }: { id: string }) {
                 ))}
               </ul>
             )}
+            {canEditStudyOptions && (
+              <details>
+                <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">+ Enroll / update</summary>
+                <form action={upsertEnrollmentAction} className="flex flex-col gap-3 mt-3">
+                  <input type="hidden" name="studentId" value={student.id} />
+                  <Field label="Service">
+                    <select name="service" required className={inputClass}>
+                      {LEARNING_SERVICES.map((s) => (
+                        <option key={s} value={s}>
+                          {humanize(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Status">
+                    <select name="status" required defaultValue="ENROLLED" className={inputClass}>
+                      {ENROLLMENT_STATUSES.map((s) => (
+                        <option key={s} value={s}>
+                          {humanize(s)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Notes (optional)">
+                    <input name="notes" className={inputClass} />
+                  </Field>
+                  <Button type="submit" variant="secondary" className="w-fit">
+                    Save
+                  </Button>
+                </form>
+              </details>
+            )}
           </div>
           <div>
             <p className="text-xs font-medium text-[var(--ink-soft)] mb-2">Test attempts</p>
             {student.testAttempts.length === 0 ? (
               <EmptyState>None on file.</EmptyState>
             ) : (
-              <ul className="text-sm space-y-1">
+              <ul className="text-sm space-y-1 mb-3">
                 {student.testAttempts.map((t) => (
                   <li key={t.id}>
                     {humanize(t.testType)}: {t.score} ({t.testDate.toLocaleDateString()})
                   </li>
                 ))}
               </ul>
+            )}
+            {canEditStudyOptions && (
+              <details>
+                <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">+ Log test attempt</summary>
+                <form action={recordTestAttemptAction} className="flex flex-col gap-3 mt-3">
+                  <input type="hidden" name="studentId" value={student.id} />
+                  <Field label="Test">
+                    <select name="testType" required className={inputClass}>
+                      {TEST_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {humanize(t)}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Score">
+                    <input name="score" required className={inputClass} placeholder="e.g. Overall 7.5" />
+                  </Field>
+                  <Field label="Test date">
+                    <input type="date" name="testDate" required className={inputClass} />
+                  </Field>
+                  <Field label="Notes (optional)">
+                    <input name="notes" className={inputClass} />
+                  </Field>
+                  <Button type="submit" variant="secondary" className="w-fit">
+                    Save
+                  </Button>
+                </form>
+              </details>
             )}
           </div>
         </div>
@@ -272,23 +332,40 @@ export async function StudentDetailContent({ id }: { id: string }) {
                 const latestSop = [...so.sopRecords].sort(
                   (a, b) => b.createdAt.getTime() - a.createdAt.getTime()
                 )[0];
+                const isConfirmed = confirmedCountryIds.has(so.countryId);
                 return (
-                  <Link
+                  <div
                     key={so.id}
-                    href={`/study-options/${so.id}`}
                     className="flex items-center justify-between border border-[var(--paper-line)] rounded-md px-3 py-2 hover:bg-[var(--paper)]"
                   >
-                    <span className="text-sm font-medium text-[var(--ink)]">{so.universityName}</span>
-                    <span className="flex items-center gap-2">
+                    <Link href={`/study-options/${so.id}`} className="text-sm font-medium text-[var(--ink)] hover:underline">
+                      {so.universityName}
+                    </Link>
+                    <div className="flex items-center gap-2">
                       <span className="text-xs text-[var(--ink-soft)]">
                         {so.country.name} · {so.intake}
-                        {confirmedCountryIds.has(so.countryId) ? " · route confirmed" : ""}
                       </span>
                       {latestSop && (
                         <Badge color={statusColor(latestSop.status)}>SOP: {humanize(latestSop.status)}</Badge>
                       )}
-                    </span>
-                  </Link>
+                      {isConfirmed ? (
+                        <Badge color="green">Route confirmed</Badge>
+                      ) : (
+                        canEditStudyOptions && (
+                          <form action={confirmCountryAction}>
+                            <input type="hidden" name="studentId" value={student.id} />
+                            <input type="hidden" name="countryId" value={so.countryId} />
+                            <button
+                              type="submit"
+                              className="text-xs font-medium text-[var(--navy)] hover:underline whitespace-nowrap"
+                            >
+                              Move forward with {so.country.name}
+                            </button>
+                          </form>
+                        )
+                      )}
+                    </div>
+                  </div>
                 );
               })}
             </div>
@@ -388,39 +465,62 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <tr className="border-b border-[var(--paper-line)] text-left text-[var(--ink-soft)]">
               <th className="py-2 font-medium">Label</th>
               <th className="py-2 font-medium">Type</th>
+              <th className="py-2 font-medium">Linked to</th>
               <th className="py-2 font-medium">Expiry</th>
               <th className="py-2 font-medium">Status</th>
               <th className="py-2 font-medium"></th>
             </tr>
           </thead>
           <tbody>
-            {student.documents.map((d) => (
-              <tr key={d.id} className="border-b border-[var(--paper-line)] last:border-0">
-                <td className="py-2">{d.label}</td>
-                <td className="py-2">{humanize(d.type)}</td>
-                <td className="py-2">
-                  {d.expiryDate ? d.expiryDate.toLocaleDateString() : "—"}
-                </td>
-                <td className="py-2">
-                  {d.verified ? (
-                    <Badge color="green">Verified</Badge>
-                  ) : (
-                    <Badge color="amber">Unverified</Badge>
-                  )}
-                </td>
-                <td className="py-2 text-right">
-                  {!d.verified && (
-                    <form action={verifyDocumentAction}>
-                      <input type="hidden" name="studentId" value={student.id} />
-                      <input type="hidden" name="documentId" value={d.id} />
-                      <button className="text-[var(--ink)] underline text-sm">
-                        Mark verified
-                      </button>
-                    </form>
-                  )}
-                </td>
-              </tr>
-            ))}
+            {student.documents.map((d) => {
+              const link = d.links[0];
+              const linkLabel = link?.studyOption
+                ? `${link.studyOption.universityName} (study option)`
+                : link?.visaCase
+                  ? `${link.visaCase.country.name} visa case`
+                  : null;
+              return (
+                <tr key={d.id} className="border-b border-[var(--paper-line)] last:border-0">
+                  <td className="py-2">
+                    {d.fileUrl ? (
+                      <a
+                        href={d.fileUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-[var(--navy)] hover:underline"
+                      >
+                        {d.label}
+                      </a>
+                    ) : (
+                      d.label
+                    )}
+                  </td>
+                  <td className="py-2">{humanize(d.type)}</td>
+                  <td className="py-2 text-[var(--ink-soft)]">{linkLabel ?? "—"}</td>
+                  <td className="py-2">
+                    {d.expiryDate ? d.expiryDate.toLocaleDateString() : "—"}
+                  </td>
+                  <td className="py-2">
+                    {d.verified ? (
+                      <Badge color="green">Verified</Badge>
+                    ) : (
+                      <Badge color="amber">Unverified</Badge>
+                    )}
+                  </td>
+                  <td className="py-2 text-right">
+                    {!d.verified && (
+                      <form action={verifyDocumentAction}>
+                        <input type="hidden" name="studentId" value={student.id} />
+                        <input type="hidden" name="documentId" value={d.id} />
+                        <button className="text-[var(--ink)] underline text-sm">
+                          Mark verified
+                        </button>
+                      </form>
+                    )}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       )}
@@ -448,6 +548,29 @@ export async function StudentDetailContent({ id }: { id: string }) {
               ].map((t) => (
                 <option key={t} value={t}>
                   {humanize(t)}
+                </option>
+              ))}
+            </select>
+          </Field>
+          <Field label="Google Drive link (optional)">
+            <input
+              type="url"
+              name="fileUrl"
+              placeholder="https://drive.google.com/..."
+              className={inputClass}
+            />
+          </Field>
+          <Field label="Link to (optional)">
+            <select name="linkTo" defaultValue="" className={inputClass}>
+              <option value="">Not linked to a specific case</option>
+              {student.studyOptions.map((so) => (
+                <option key={so.id} value={`studyOption:${so.id}`}>
+                  {so.universityName} ({so.country.name}) — study option
+                </option>
+              ))}
+              {student.visaCases.map((vc) => (
+                <option key={vc.id} value={`visaCase:${vc.id}`}>
+                  {vc.country.name} — visa case
                 </option>
               ))}
             </select>
@@ -606,6 +729,14 @@ export async function StudentDetailContent({ id }: { id: string }) {
             <dd>{student.additionalNotes ?? "—"}</dd>
           </div>
         </dl>
+      </Card>
+
+      <Card className="p-4 flex items-center justify-between gap-4">
+        <div>
+          <p className="text-xs font-medium text-[var(--ink-soft)] uppercase tracking-wide">Next step</p>
+          <p className="text-sm mt-1">{nextStep.message}</p>
+        </div>
+        <Badge color={stageColor(stage)}>{stage}</Badge>
       </Card>
 
       <Tabs tabs={tabs} />

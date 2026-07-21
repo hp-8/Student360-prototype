@@ -7,6 +7,9 @@ import {
   updateOfferStatus,
   updateApplicationStatus,
   updateStudyOptionStatus,
+  updateStudyOption,
+  deleteStudyOption,
+  reassignStudyOptionAppsUser,
 } from "@/lib/domain/studyOptions";
 import { createSopRecord, updateSopStatus } from "@/lib/domain/sop";
 import { logActivity } from "@/lib/domain/audit";
@@ -14,6 +17,7 @@ import { prisma } from "@/lib/prisma";
 import type { OfferStatus, StudyOptionStatus, ApplicationStatus, SopStatus } from "@prisma/client";
 import { humanize } from "@/lib/statusColors";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function createApplicationAction(formData: FormData) {
   const session = await requireRole("APPLICATIONS_TEAM", "MANAGER");
@@ -84,7 +88,7 @@ export async function updateOfferStatusAction(formData: FormData) {
   const studentId = String(formData.get("studentId"));
   const offerId = String(formData.get("offerId"));
   const status = String(formData.get("status")) as OfferStatus;
-  await updateOfferStatus(offerId, status);
+  await updateOfferStatus(offerId, status, session.id);
   await logActivity(prisma, {
     studentId,
     actorId: session.id,
@@ -120,6 +124,41 @@ export async function updateSopStatusAction(formData: FormData) {
   const status = String(formData.get("status")) as SopStatus;
   await updateSopStatus(sopId, status, studentId, session.id);
   revalidatePath(`/study-options/${studyOptionId}`);
+}
+
+export async function updateStudyOptionAction(formData: FormData) {
+  const session = await requireRole("COUNSELLOR", "MANAGER");
+  const studyOptionId = String(formData.get("studyOptionId"));
+  await updateStudyOption(
+    studyOptionId,
+    {
+      countryId: String(formData.get("countryId")),
+      universityName: String(formData.get("universityName")),
+      courseName: String(formData.get("courseName")),
+      intake: String(formData.get("intake")),
+      intakeId: String(formData.get("intakeId") ?? "") || null,
+      notes: String(formData.get("notes") ?? "").trim() || null,
+    },
+    session.id
+  );
+  revalidatePath(`/study-options/${studyOptionId}`);
+}
+
+export async function reassignStudyOptionAppsUserAction(formData: FormData) {
+  const session = await requireRole("COUNSELLOR", "MANAGER");
+  const studyOptionId = String(formData.get("studyOptionId"));
+  const newAppsUserId = String(formData.get("newAppsUserId"));
+  await reassignStudyOptionAppsUser(studyOptionId, newAppsUserId, session.id);
+  revalidatePath(`/study-options/${studyOptionId}`);
+}
+
+export async function deleteStudyOptionAction(formData: FormData) {
+  const session = await requireRole("COUNSELLOR", "MANAGER");
+  const studyOptionId = String(formData.get("studyOptionId"));
+  const studentId = String(formData.get("studentId"));
+  await deleteStudyOption(studyOptionId, session.id);
+  revalidatePath(`/students/${studentId}`);
+  redirect(`/students/${studentId}`);
 }
 
 export async function updateStudyOptionStatusAction(formData: FormData) {

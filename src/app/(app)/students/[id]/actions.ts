@@ -6,7 +6,8 @@ import { confirmCountry } from "@/lib/domain/countryConfirmation";
 import { reassignCaseManager } from "@/lib/domain/caseManager";
 import { addNote } from "@/lib/domain/notes";
 import { addDocument, verifyDocument } from "@/lib/domain/documents";
-import type { DocumentType } from "@prisma/client";
+import { upsertEnrollment, recordTestAttempt } from "@/lib/domain/learning";
+import type { DocumentType, LearningServiceType, LearningEnrollmentStatus, TestType } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function createStudyOptionAction(formData: FormData) {
@@ -70,13 +71,24 @@ export async function addDocumentAction(formData: FormData) {
   const studentId = String(formData.get("studentId"));
   const type = String(formData.get("type")) as DocumentType;
   const label = String(formData.get("label")).trim();
+  const fileUrl = String(formData.get("fileUrl") ?? "").trim() || null;
   const expiryDateRaw = String(formData.get("expiryDate") ?? "");
+  const linkToRaw = String(formData.get("linkTo") ?? "");
+  const [linkKind, linkId] = linkToRaw.split(":");
+  const linkTo =
+    linkKind === "studyOption" && linkId
+      ? { studyOptionId: linkId }
+      : linkKind === "visaCase" && linkId
+        ? { visaCaseId: linkId }
+        : undefined;
   await addDocument({
     studentId,
     type,
     label,
+    fileUrl,
     expiryDate: expiryDateRaw ? new Date(expiryDateRaw) : null,
     uploadedById: session.id,
+    linkTo,
   });
   revalidatePath(`/students/${studentId}`);
 }
@@ -91,5 +103,26 @@ export async function verifyDocumentAction(formData: FormData) {
   const studentId = String(formData.get("studentId"));
   const documentId = String(formData.get("documentId"));
   await verifyDocument(documentId, session.id);
+  revalidatePath(`/students/${studentId}`);
+}
+
+export async function upsertEnrollmentAction(formData: FormData) {
+  const session = await requireRole("COUNSELLOR", "MANAGER");
+  const studentId = String(formData.get("studentId"));
+  const service = String(formData.get("service")) as LearningServiceType;
+  const status = String(formData.get("status")) as LearningEnrollmentStatus;
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  await upsertEnrollment({ studentId, service, status, notes }, session.id);
+  revalidatePath(`/students/${studentId}`);
+}
+
+export async function recordTestAttemptAction(formData: FormData) {
+  const session = await requireRole("COUNSELLOR", "MANAGER");
+  const studentId = String(formData.get("studentId"));
+  const testType = String(formData.get("testType")) as TestType;
+  const score = String(formData.get("score")).trim();
+  const testDate = new Date(String(formData.get("testDate")));
+  const notes = String(formData.get("notes") ?? "").trim() || null;
+  await recordTestAttempt({ studentId, testType, score, testDate, notes }, session.id);
   revalidatePath(`/students/${studentId}`);
 }

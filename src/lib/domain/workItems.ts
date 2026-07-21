@@ -5,6 +5,7 @@ import type {
   WorkItemStatus,
 } from "@prisma/client";
 import { logActivity } from "@/lib/domain/audit";
+import { notifyUser } from "@/lib/domain/notifications";
 import { humanize } from "@/lib/statusColors";
 
 export async function createWorkItem(data: {
@@ -27,6 +28,14 @@ export async function createWorkItem(data: {
       entityType: "WorkItem",
       entityId: item.id,
     });
+    if (data.assignedToId) {
+      await notifyUser(tx, {
+        userId: data.assignedToId,
+        actorId: data.createdById,
+        title: `New work item: ${data.title}`,
+        href: `/work-items?studentId=${data.studentId}`,
+      });
+    }
     return item;
   });
 }
@@ -48,6 +57,12 @@ export async function assignWorkItem(
       action: `Assigned work item "${item.title}" to ${assignee.name}`,
       entityType: "WorkItem",
       entityId: item.id,
+    });
+    await notifyUser(tx, {
+      userId: assignedToId,
+      actorId: byUserId,
+      title: `You were assigned a work item: ${item.title}`,
+      href: `/work-items?studentId=${item.studentId}`,
     });
     return item;
   });

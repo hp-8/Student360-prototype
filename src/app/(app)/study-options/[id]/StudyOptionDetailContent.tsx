@@ -15,6 +15,7 @@ import {
 import { statusColor, humanize } from "@/lib/statusColors";
 import { staffName, studentName } from "@/lib/displayName";
 import { BackLink } from "@/components/BackLink";
+import { ConfirmButton } from "@/components/ConfirmButton";
 import {
   createApplicationAction,
   updateApplicationStatusAction,
@@ -23,6 +24,9 @@ import {
   createSopRecordAction,
   updateSopStatusAction,
   updateStudyOptionStatusAction,
+  updateStudyOptionAction,
+  deleteStudyOptionAction,
+  reassignStudyOptionAppsUserAction,
 } from "./actions";
 
 const APPLICATION_STATUSES = ["SUBMITTED", "UNDER_REVIEW", "DECIDED", "WITHDRAWN"];
@@ -42,12 +46,23 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
       assignedAppsUser: true,
       applications: { include: { offer: true }, orderBy: { createdAt: "desc" } },
       sopRecords: { orderBy: { createdAt: "desc" } },
+      workItems: { select: { id: true } },
     },
   });
   if (!studyOption) notFound();
 
   const canEditApplications = session.role === "APPLICATIONS_TEAM" || session.role === "MANAGER";
   const canEditStatus = session.role === "COUNSELLOR" || session.role === "MANAGER";
+
+  const [countries, appsUsers] = await Promise.all([
+    canEditStatus ? prisma.country.findMany({ orderBy: { name: "asc" } }) : Promise.resolve([]),
+    prisma.user.findMany({ where: { roles: { has: "APPLICATIONS_TEAM" }, active: true }, orderBy: { name: "asc" } }),
+  ]);
+  const canDelete =
+    canEditStatus &&
+    studyOption.applications.length === 0 &&
+    studyOption.sopRecords.length === 0 &&
+    studyOption.workItems.length === 0;
 
   return (
     <div className="flex flex-col gap-6">
@@ -62,6 +77,63 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
             </Link>
           </>
         }
+        action={
+          canEditStatus && (
+            <div className="flex items-center gap-3">
+              <details className="text-right">
+                <summary className="text-sm text-[var(--ink-soft)] cursor-pointer">Edit details</summary>
+                <form
+                  action={updateStudyOptionAction}
+                  className="grid grid-cols-2 gap-3 mt-3 text-left w-[420px]"
+                >
+                  <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                  <input type="hidden" name="intakeId" value={studyOption.intakeId ?? ""} />
+                  <Field label="Country">
+                    <select name="countryId" defaultValue={studyOption.countryId} required className={inputClass}>
+                      {countries.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field label="Intake">
+                    <input name="intake" defaultValue={studyOption.intake} required className={inputClass} />
+                  </Field>
+                  <Field label="University">
+                    <input name="universityName" defaultValue={studyOption.universityName} required className={inputClass} />
+                  </Field>
+                  <Field label="Course">
+                    <input name="courseName" defaultValue={studyOption.courseName} required className={inputClass} />
+                  </Field>
+                  <div className="col-span-2">
+                    <Field label="Notes (optional)">
+                      <input name="notes" defaultValue={studyOption.notes ?? ""} className={inputClass} />
+                    </Field>
+                  </div>
+                  <div className="col-span-2">
+                    <Button type="submit" variant="secondary">
+                      Save changes
+                    </Button>
+                  </div>
+                </form>
+              </details>
+              {canDelete && (
+                <form action={deleteStudyOptionAction}>
+                  <input type="hidden" name="studyOptionId" value={studyOption.id} />
+                  <input type="hidden" name="studentId" value={studyOption.studentId} />
+                  <ConfirmButton
+                    type="submit"
+                    confirmText={`Delete the ${studyOption.universityName} study option? This can't be undone.`}
+                    className="text-sm text-[var(--status-red-fg)] hover:underline"
+                  >
+                    Delete
+                  </ConfirmButton>
+                </form>
+              )}
+            </div>
+          )
+        }
       />
 
       <Card className="p-5">
@@ -74,6 +146,24 @@ export async function StudyOptionDetailContent({ id }: { id: string }) {
           Applications team:{" "}
           {studyOption.assignedAppsUser ? staffName(studyOption.assignedAppsUser) : "—"}
         </p>
+        {canEditStatus && (
+          <form action={reassignStudyOptionAppsUserAction} className="flex items-end gap-3 mb-4">
+            <input type="hidden" name="studyOptionId" value={studyOption.id} />
+            <Field label={studyOption.assignedAppsUser ? "Reassign applications team" : "Assign applications team"}>
+              <select name="newAppsUserId" required defaultValue={studyOption.assignedAppsUserId ?? ""} className={inputClass}>
+                <option value="">Select member</option>
+                {appsUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Button type="submit" variant="secondary">
+              {studyOption.assignedAppsUser ? "Reassign" : "Assign"}
+            </Button>
+          </form>
+        )}
         {canEditStatus && (
           <form action={updateStudyOptionStatusAction} className="flex items-end gap-3">
             <input type="hidden" name="studyOptionId" value={studyOption.id} />

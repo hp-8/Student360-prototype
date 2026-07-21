@@ -61,6 +61,52 @@ export function computeStudentStage(s: StudentStageInput): StudentStage {
   return "New";
 }
 
+// What a counsellor should do next, and which tab to do it in - shown as a
+// banner on the student page so "what's the next step" isn't a guessing game.
+export function nextStepFor(stage: StudentStage): { message: string; tab: string } {
+  switch (stage) {
+    case "New":
+      return {
+        message: "No study options yet — add the student's first one to get things moving.",
+        tab: "Study Options",
+      };
+    case "Exploring Options":
+      return {
+        message:
+          "Study options are in progress. Follow up on applications, and once an offer arrives, move forward with a country from that study option.",
+        tab: "Study Options",
+      };
+    case "Offer Received":
+      return {
+        message:
+          "An offer has landed. Once the student decides, use \"Move forward with this country\" on that study option.",
+        tab: "Study Options",
+      };
+    case "Country Confirmed":
+      return {
+        message: "Country confirmed — open a visa application to start the visa process.",
+        tab: "Visa Applications",
+      };
+    case "Visa In Progress":
+      return {
+        message: "Visa application is underway — check for the next required step (documents, biometrics, interview, decision).",
+        tab: "Visa Applications",
+      };
+    case "Visa Refused":
+      return {
+        message: "Visa was refused — review the case and decide on reapplication or an alternate route.",
+        tab: "Visa Applications",
+      };
+    case "Visa Approved":
+      return {
+        message: "Visa approved — confirm final travel and pre-departure logistics with the student.",
+        tab: "Visa Applications",
+      };
+    case "Closed":
+      return { message: "This case is closed. No further action needed.", tab: "Activity" };
+  }
+}
+
 export function stageColor(stage: StudentStage): BadgeColor {
   switch (stage) {
     case "New":

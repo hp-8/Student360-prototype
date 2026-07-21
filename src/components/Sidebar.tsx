@@ -25,6 +25,7 @@ import type { SessionUser } from "@/lib/auth/session";
 import { ROLE_LABEL, NAV_BY_ROLE } from "@/lib/roles";
 import { logoutAction } from "@/app/logout/actions";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const ICON_BY_HREF: Record<string, ComponentType<{ size?: number; className?: string }>> = {
   "/front-desk": Inbox,
@@ -57,7 +58,22 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-export function Sidebar({ session }: { session: SessionUser }) {
+type NotificationItem = {
+  id: string;
+  title: string;
+  body: string | null;
+  href: string | null;
+  read: boolean;
+  createdAt: Date;
+};
+
+export function Sidebar({
+  session,
+  notifications,
+}: {
+  session: SessionUser;
+  notifications: NotificationItem[];
+}) {
   const navItems = NAV_BY_ROLE[session.role];
   const [collapsed, setCollapsed] = useState(false);
 
@@ -85,7 +101,10 @@ export function Sidebar({ session }: { session: SessionUser }) {
           S
         </span>
         {!collapsed && (
-          <span className="font-semibold text-[var(--ink)] tracking-tight truncate">Student360</span>
+          <>
+            <span className="font-semibold text-[var(--ink)] tracking-tight truncate flex-1">Student360</span>
+            <NotificationBell notifications={notifications} />
+          </>
         )}
       </div>
 

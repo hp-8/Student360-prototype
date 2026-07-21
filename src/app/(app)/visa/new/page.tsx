@@ -13,13 +13,14 @@ export default async function NewVisaCasePage({
   const session = await requireRole("VISA_TEAM", "MANAGER");
   const { studentId } = await searchParams;
 
-  const [students, routes, offers, visaStaff] = await Promise.all([
+  const [students, routes, offers, visaStaff, intakes] = await Promise.all([
     prisma.student.findMany({ orderBy: { firstName: "asc" } }),
     prisma.visaRoute.findMany({ include: { country: true }, orderBy: { name: "asc" } }),
     prisma.offer.findMany(),
     session.role === "MANAGER"
       ? getDirectReports(session.id, "VISA_TEAM")
       : prisma.user.findMany({ where: { roles: { has: "VISA_TEAM" }, active: true } }),
+    prisma.intake.findMany({ select: { id: true, name: true, countryId: true } }),
   ]);
 
   return (
@@ -44,6 +45,7 @@ export default async function NewVisaCasePage({
           status: o.status,
         }))}
         visaStaff={visaStaff.map((s) => ({ id: s.id, name: staffName(s) }))}
+        intakes={intakes}
         defaultStudentId={studentId}
       />
     </div>

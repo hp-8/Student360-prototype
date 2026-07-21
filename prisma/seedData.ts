@@ -311,8 +311,8 @@ export async function seedDatabase() {
     },
     appsTeam.id
   );
-  await updateOfferStatus(ananyaGermanyOffer.id, "UNCONDITIONAL");
-  await updateOfferStatus(ananyaGermanyOffer.id, "ACCEPTED");
+  await updateOfferStatus(ananyaGermanyOffer.id, "UNCONDITIONAL", appsTeam.id);
+  await updateOfferStatus(ananyaGermanyOffer.id, "ACCEPTED", appsTeam.id);
 
   const ananyaUkOffer = await recordOffer(
     {
@@ -894,12 +894,12 @@ export async function seedDatabase() {
   await verifyDocument(kabirBankDoc.id, visaTeam2.id);
 
   console.log("Seeding learning enrollments and test attempts...");
-  await upsertEnrollment({ studentId: ananya.id, service: "IELTS", status: "COMPLETED" });
-  await recordTestAttempt({ studentId: ananya.id, testType: "IELTS", score: "Overall 7.5 (L:8.0 R:7.5 W:7.0 S:7.5)", testDate: new Date("2025-11-10") });
+  await upsertEnrollment({ studentId: ananya.id, service: "IELTS", status: "COMPLETED" }, counsellor.id);
+  await recordTestAttempt({ studentId: ananya.id, testType: "IELTS", score: "Overall 7.5 (L:8.0 R:7.5 W:7.0 S:7.5)", testDate: new Date("2025-11-10") }, counsellor.id);
 
-  await upsertEnrollment({ studentId: meera.id, service: "GERMAN_CLASS", status: "ENROLLED" });
-  await upsertEnrollment({ studentId: priya.id, service: "SOP_ASSISTANCE", status: "COMPLETED" });
-  await upsertEnrollment({ studentId: rohan.id, service: "IELTS", status: "ENROLLED" });
+  await upsertEnrollment({ studentId: meera.id, service: "GERMAN_CLASS", status: "ENROLLED" }, counsellor.id);
+  await upsertEnrollment({ studentId: priya.id, service: "SOP_ASSISTANCE", status: "COMPLETED" }, counsellor.id);
+  await upsertEnrollment({ studentId: rohan.id, service: "IELTS", status: "ENROLLED" }, counsellor2.id);
 
   console.log("Seeding extra counselling notes...");
   await addNote(meera.id, counsellor.id, "Student has strong preference for Munich area universities; keep this in mind when discussing active offer choice.", "COUNSELLING");

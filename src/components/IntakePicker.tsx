@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Field, inputClass } from "@/components/ui";
 
 type Country = { id: string; name: string };
@@ -11,12 +11,24 @@ const OTHER_VALUE = "__other__";
 export function IntakePicker({
   countries,
   intakes,
+  fixedCountryId,
 }: {
-  countries: Country[];
+  countries?: Country[];
   intakes: Intake[];
+  // When set, the country is already implied by context (e.g. a chosen visa
+  // route) - the Country select is hidden and this drives the intake filter
+  // directly instead.
+  fixedCountryId?: string;
 }) {
-  const [countryId, setCountryId] = useState("");
+  const [countryId, setCountryId] = useState(fixedCountryId ?? "");
   const [intakeChoice, setIntakeChoice] = useState("");
+
+  useEffect(() => {
+    if (fixedCountryId !== undefined) {
+      setCountryId(fixedCountryId);
+      setIntakeChoice("");
+    }
+  }, [fixedCountryId]);
 
   const availableIntakes = intakes.filter((i) => i.countryId === countryId);
   const selectedIntake = availableIntakes.find((i) => i.id === intakeChoice);
@@ -24,25 +36,27 @@ export function IntakePicker({
 
   return (
     <>
-      <Field label="Country">
-        <select
-          name="countryId"
-          required
-          value={countryId}
-          onChange={(e) => {
-            setCountryId(e.target.value);
-            setIntakeChoice("");
-          }}
-          className={inputClass}
-        >
-          <option value="">Select country</option>
-          {countries.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
-            </option>
-          ))}
-        </select>
-      </Field>
+      {fixedCountryId === undefined && (
+        <Field label="Country">
+          <select
+            name="countryId"
+            required
+            value={countryId}
+            onChange={(e) => {
+              setCountryId(e.target.value);
+              setIntakeChoice("");
+            }}
+            className={inputClass}
+          >
+            <option value="">Select country</option>
+            {(countries ?? []).map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </Field>
+      )}
 
       <Field label="Intake">
         <select

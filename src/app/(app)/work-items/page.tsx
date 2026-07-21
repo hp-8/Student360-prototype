@@ -80,9 +80,21 @@ export default async function WorkItemsPage({
       <PageHeader
         title="Work items"
         description={
-          session.role === "MANAGER"
-            ? "All work items across departments."
-            : "Work items assigned to you."
+          <>
+            {session.role === "MANAGER"
+              ? "All work items across departments — the task-level checklist behind each case."
+              : "Your task checklist — individual to-dos across all the cases you touch."}
+            {session.role === "APPLICATIONS_TEAM" && (
+              <>
+                {" "}
+                For the study options you own end-to-end, see{" "}
+                <Link href="/applications" className="underline text-[var(--navy)]">
+                  My Study Options
+                </Link>
+                .
+              </>
+            )}
+          </>
         }
       />
 

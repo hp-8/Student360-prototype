@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { findDuplicateStudents } from "@/lib/domain/leads";
-import { PageHeader, Card, SectionTitle, Field, inputClass, Button } from "@/components/ui";
+import { PageHeader, Card, SectionTitle, Field, inputClass, Button, EmptyState } from "@/components/ui";
 import { convertAction, markLostAction } from "./actions";
 import { staffName, studentName } from "@/lib/displayName";
 
@@ -25,6 +25,12 @@ export default async function LeadDetailPage({
     lastName: lead.lastName,
     phone: lead.phone,
     email: lead.email,
+  });
+
+  const auditLogs = await prisma.auditLog.findMany({
+    where: { leadId: lead.id },
+    include: { actor: true },
+    orderBy: { createdAt: "desc" },
   });
 
   return (
@@ -127,6 +133,24 @@ export default async function LeadDetailPage({
             Mark enquiry as lost
           </Button>
         </form>
+      </Card>
+
+      <Card className="p-4 mt-6">
+        <SectionTitle>Activity</SectionTitle>
+        {auditLogs.length === 0 ? (
+          <EmptyState>No activity yet.</EmptyState>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {auditLogs.map((entry) => (
+              <li key={entry.id} className="text-sm pl-3 border-l-2 border-[var(--paper-line)]">
+                <p className="text-[var(--ink-soft)] italic">{entry.action}</p>
+                <p className="text-xs text-[var(--ink-soft)]/70 mt-0.5">
+                  {staffName(entry.actor)} · {entry.createdAt.toLocaleString()}
+                </p>
+              </li>
+            ))}
+          </ul>
+        )}
       </Card>
     </div>
   );
