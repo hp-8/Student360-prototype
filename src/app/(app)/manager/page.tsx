@@ -37,7 +37,7 @@ const STAGE_SEGMENT_COLOR: Record<StudentStage, Segment["color"]> = {
 export default async function ManagerDashboardPage() {
   await requireRole("MANAGER");
 
-  const [students, workItems, countryConfirmations, visaCaseCount] = await Promise.all([
+  const [students, workItems, countryConfirmations, visaCaseCount, openEnquiryCount] = await Promise.all([
     prisma.student.findMany({
       select: {
         studyOptions: { select: { id: true } },
@@ -57,6 +57,7 @@ export default async function ManagerDashboardPage() {
       include: { country: true },
     }),
     prisma.visaCase.count({ where: { lifecycleStatus: "OPEN" } }),
+    prisma.lead.count({ where: { status: "OPEN" } }),
   ]);
 
   const stageCounts = new Map<StudentStage, number>(STAGE_ORDER.map((s) => [s, 0]));
@@ -103,7 +104,13 @@ export default async function ManagerDashboardPage() {
         description="Where every student stands right now. Visa outcomes are counted per visa application, not per student."
       />
 
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-4 gap-4">
+        <Link href="/front-desk">
+          <Card className="p-5 hover:shadow-[var(--shadow-card-hover)] transition-shadow">
+            <p className="text-sm text-[var(--ink-soft)]">Open enquiries</p>
+            <p className="text-3xl font-semibold text-[var(--ink)] mt-1">{openEnquiryCount}</p>
+          </Card>
+        </Link>
         <Link href="/manager/students">
           <Card className="p-5 hover:shadow-[var(--shadow-card-hover)] transition-shadow">
             <p className="text-sm text-[var(--ink-soft)]">Total students</p>

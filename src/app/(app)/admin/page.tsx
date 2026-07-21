@@ -3,11 +3,16 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, Field, inputClass, Button } from "@/components/ui";
 import { ROLE_LABEL } from "@/lib/roles";
 import { staffName } from "@/lib/displayName";
+import { StatTiles } from "@/components/dashboard/StatTiles";
+import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
+import { QuickLinksCard } from "@/components/dashboard/QuickLinksCard";
 import {
   createUserAction,
   toggleUserActiveAction,
   updateUserRolesAndManagerAction,
 } from "./actions";
+
+const UPCOMING_DEADLINE_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 const ROLES = [
   "FRONT_DESK",
@@ -45,19 +50,65 @@ function RoleCheckboxes({
 export default async function AdminUsersPage() {
   await requireRole("ADMINISTRATOR");
 
-  const [users, branches] = await Promise.all([
+  const now = new Date();
+  const upcomingWindow = new Date(now.getTime() + UPCOMING_DEADLINE_WINDOW_MS);
+
+  const [users, branches, countryCount, visaRouteCount, upcomingIntakes] = await Promise.all([
     prisma.user.findMany({
       include: { branch: true, manager: true },
       orderBy: { createdAt: "asc" },
     }),
     prisma.branch.findMany({ orderBy: { name: "asc" } }),
+    prisma.country.count(),
+    prisma.visaRoute.count(),
+    prisma.intake.findMany({
+      where: { applicationDeadline: { gte: now, lte: upcomingWindow } },
+      include: { country: true },
+      orderBy: { applicationDeadline: "asc" },
+    }),
   ]);
+
+  const activeUserCount = users.filter((u) => u.active).length;
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Users"
         description="Configuration only. Administrators do not manage live student, application or visa records. A user can hold more than one role, and can report to a manager for hierarchy-scoped assignment."
+      />
+
+      <Card className="p-5">
+        <SectionTitle>Overview</SectionTitle>
+        <StatTiles
+          tiles={[
+            { label: "Active users", value: activeUserCount, href: "/admin" },
+            { label: "Branches", value: branches.length, href: "/admin/branches" },
+            { label: "Countries", value: countryCount, href: "/admin/countries" },
+            { label: "Visa routes", value: visaRouteCount, href: "/admin/countries" },
+            { label: "Deadlines (30d)", value: upcomingIntakes.length, href: "/admin/intakes" },
+          ]}
+        />
+      </Card>
+
+      <ActionItemsCard
+        title="Application deadlines in the next 30 days"
+        emptyText="Nothing due in the next 30 days."
+        items={upcomingIntakes.map((i) => ({
+          id: i.id,
+          title: `${i.country.name} — ${i.name}`,
+          subtitle: `Deadline ${i.applicationDeadline!.toLocaleDateString()}`,
+          href: "/admin/intakes",
+        }))}
+      />
+
+      <QuickLinksCard
+        title="Manage"
+        links={[
+          { label: "Branches", href: "/admin/branches", description: "Office locations" },
+          { label: "Countries & Routes", href: "/admin/countries", description: "Destinations and visa routes" },
+          { label: "Intakes & Deadlines", href: "/admin/intakes", description: "Application deadlines by intake" },
+          { label: "Requirement Templates", href: "/admin/templates", description: "Visa document checklists" },
+        ]}
       />
 
       <Card className="p-5">

@@ -1,21 +1,44 @@
 import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { PageHeader, Card, Badge, EmptyState, Button } from "@/components/ui";
+import { PageHeader, Card, SectionTitle, Badge, EmptyState, Button } from "@/components/ui";
 import { statusColor } from "@/lib/statusColors";
-import { leadName } from "@/lib/displayName";
+import { leadName, staffName } from "@/lib/displayName";
+import { StatTiles } from "@/components/dashboard/StatTiles";
+import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
+import { RecentActivityCard } from "@/components/dashboard/RecentActivityCard";
+
+const STALE_AFTER_MS = 3 * 24 * 60 * 60 * 1000;
+const RECENT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 
 export default async function FrontDeskPage() {
   await requireRole("FRONT_DESK", "MANAGER");
 
-  const leads = await prisma.lead.findMany({
-    where: { status: { in: ["OPEN", "LOST"] } },
-    include: { branch: true },
-    orderBy: { createdAt: "desc" },
-  });
+  const since = new Date(Date.now() - RECENT_WINDOW_MS);
+
+  const [leads, openCount, convertedRecentCount, lostRecentCount, recentActivity] = await Promise.all([
+    prisma.lead.findMany({
+      where: { status: { in: ["OPEN", "LOST"] } },
+      include: { branch: true },
+      orderBy: { createdAt: "desc" },
+    }),
+    prisma.lead.count({ where: { status: "OPEN" } }),
+    prisma.lead.count({ where: { status: "CONVERTED", updatedAt: { gte: since } } }),
+    prisma.lead.count({ where: { status: "LOST", updatedAt: { gte: since } } }),
+    prisma.auditLog.findMany({
+      where: { leadId: { not: null } },
+      include: { actor: true, lead: true },
+      orderBy: { createdAt: "desc" },
+      take: 8,
+    }),
+  ]);
+
+  const staleLeads = leads.filter(
+    (l) => l.status === "OPEN" && l.createdAt.getTime() < Date.now() - STALE_AFTER_MS
+  );
 
   return (
-    <div>
+    <div className="flex flex-col gap-6">
       <PageHeader
         title="Enquiries"
         description="New enquiries awaiting conversion into a student profile, plus recently lost enquiries."
@@ -25,6 +48,40 @@ export default async function FrontDeskPage() {
           </Link>
         }
       />
+
+      <Card className="p-5">
+        <SectionTitle>Overview</SectionTitle>
+        <StatTiles
+          tiles={[
+            { label: "Open enquiries", value: openCount, href: "/front-desk" },
+            { label: "Converted (30d)", value: convertedRecentCount, color: "text-[var(--status-green-fg)]" },
+            { label: "Lost (30d)", value: lostRecentCount, color: "text-[var(--status-red-fg)]" },
+          ]}
+        />
+      </Card>
+
+      <ActionItemsCard
+        title="Awaiting follow-up (open 3+ days)"
+        emptyText="No stale enquiries — everything open has been touched recently."
+        items={staleLeads.map((l) => ({
+          id: l.id,
+          title: leadName(l),
+          subtitle: `${l.branch.name} · enquired ${l.createdAt.toLocaleDateString()}`,
+          href: `/front-desk/leads/${l.id}`,
+        }))}
+      />
+
+      <RecentActivityCard
+        entries={recentActivity.map((a) => ({
+          id: a.id,
+          text: a.action,
+          actorName: staffName(a.actor),
+          createdAt: a.createdAt,
+          href: a.lead ? `/front-desk/leads/${a.lead.id}` : undefined,
+          linkLabel: a.lead ? leadName(a.lead) : undefined,
+        }))}
+      />
+
       <Card>
         {leads.length === 0 ? (
           <EmptyState>No open or lost enquiries.</EmptyState>

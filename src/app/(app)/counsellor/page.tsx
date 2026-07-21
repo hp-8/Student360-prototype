@@ -6,6 +6,9 @@ import { staffName, studentName } from "@/lib/displayName";
 import { computeStudentStage, stageColor, type StudentStage } from "@/lib/domain/stage";
 import { computeQueueCounts } from "@/lib/domain/workQueue";
 import { QueueTiles } from "@/components/QueueTiles";
+import { StatTiles } from "@/components/dashboard/StatTiles";
+import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
+import { RecentActivityCard } from "@/components/dashboard/RecentActivityCard";
 
 const STAGE_ORDER: StudentStage[] = [
   "New",
@@ -99,61 +102,32 @@ export default async function CounsellorHomePage() {
         {students.length === 0 ? (
           <EmptyState>No assigned students yet.</EmptyState>
         ) : (
-          <div className="grid grid-cols-4 gap-3">
-            {STAGE_ORDER.map((stage) => (
-              <div key={stage} className="bg-[var(--paper)] rounded-xl px-3.5 py-3 flex flex-col gap-1">
-                <p className="text-xs text-[var(--ink-soft)] font-medium">{stage}</p>
-                <span className="font-semibold text-2xl">{stageCounts.get(stage) ?? 0}</span>
-              </div>
-            ))}
-          </div>
+          <StatTiles tiles={STAGE_ORDER.map((stage) => ({ label: stage, value: stageCounts.get(stage) ?? 0 }))} />
         )}
       </Card>
 
-      {overdueItems.length > 0 && (
-        <Card className="p-5 border-[var(--status-red-fg)]/30 bg-[var(--status-red-bg)]">
-          <SectionTitle>Overdue work items</SectionTitle>
-          <ul className="flex flex-col gap-1">
-            {overdueItems.map((item) => (
-              <li key={item.id} className="text-sm">
-                <Link href={`/students/${item.studentId}`} className="underline">
-                  {studentName(item.student)}
-                </Link>{" "}
-                — {item.title} (due {item.dueDate!.toLocaleDateString()})
-              </li>
-            ))}
-          </ul>
-        </Card>
-      )}
+      <ActionItemsCard
+        title="Overdue work items"
+        tone="red"
+        emptyText="Nothing overdue."
+        items={overdueItems.map((item) => ({
+          id: item.id,
+          title: studentName(item.student),
+          subtitle: `${item.title} (due ${item.dueDate!.toLocaleDateString()})`,
+          href: `/students/${item.studentId}`,
+        }))}
+      />
 
-      <Card className="p-5">
-        <SectionTitle>Recent activity</SectionTitle>
-        {recentActivity.length === 0 ? (
-          <EmptyState>No activity yet.</EmptyState>
-        ) : (
-          <ul className="flex flex-col gap-2">
-            {recentActivity.map((a) => (
-              <li key={a.id} className="text-sm border-l-2 border-[var(--paper-line)] pl-3">
-                <p className="text-[var(--ink-soft)] italic">
-                  {a.action}
-                  {a.student && (
-                    <>
-                      {" "}
-                      —{" "}
-                      <Link href={`/students/${a.student.id}`} className="underline not-italic">
-                        {studentName(a.student)}
-                      </Link>
-                    </>
-                  )}
-                </p>
-                <p className="text-xs text-[var(--ink-soft)]/70 mt-0.5">
-                  {staffName(a.actor)} · {a.createdAt.toLocaleString()}
-                </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </Card>
+      <RecentActivityCard
+        entries={recentActivity.map((a) => ({
+          id: a.id,
+          text: a.action,
+          actorName: staffName(a.actor),
+          createdAt: a.createdAt,
+          href: a.student ? `/students/${a.student.id}` : undefined,
+          linkLabel: a.student ? studentName(a.student) : undefined,
+        }))}
+      />
 
       <Card>
         <div className="p-5 pb-0">
