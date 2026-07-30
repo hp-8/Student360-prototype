@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { Sidebar, COLLAPSE_COOKIE_NAME } from "@/components/Sidebar";
+import { Sidebar } from "@/components/Sidebar";
+import { COLLAPSE_COOKIE_NAME } from "@/lib/sidebarCookie";
 
 export default async function AppLayout({
   children,

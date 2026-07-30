@@ -26,6 +26,7 @@ import { ROLE_LABEL, NAV_BY_ROLE } from "@/lib/roles";
 import { logoutAction } from "@/app/logout/actions";
 import { RoleSwitcher } from "@/components/RoleSwitcher";
 import { NotificationBell } from "@/components/NotificationBell";
+import { COLLAPSE_COOKIE_NAME, COLLAPSE_COOKIE_MAX_AGE } from "@/lib/sidebarCookie";
 
 const ICON_BY_HREF: Record<string, ComponentType<{ size?: number; className?: string }>> = {
   "/front-desk": Inbox,
@@ -50,8 +51,6 @@ const ICON_BY_HREF: Record<string, ComponentType<{ size?: number; className?: st
 // it and render the right width on first paint. localStorage is only readable
 // after hydration, which meant an effect and a visible snap from wide to
 // collapsed on every navigation.
-export const COLLAPSE_COOKIE_NAME = "s360_sidebar_collapsed";
-const COLLAPSE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 function initials(name: string) {
   return name
