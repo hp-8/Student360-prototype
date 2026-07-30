@@ -1,6 +1,7 @@
+import { cookies } from "next/headers";
 import { requireUser } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
-import { Sidebar } from "@/components/Sidebar";
+import { Sidebar, COLLAPSE_COOKIE_NAME } from "@/components/Sidebar";
 
 export default async function AppLayout({
   children,
@@ -15,10 +16,16 @@ export default async function AppLayout({
     orderBy: { createdAt: "desc" },
     take: 20,
   });
+  const sidebarCollapsed =
+    (await cookies()).get(COLLAPSE_COOKIE_NAME)?.value === "true";
 
   return (
     <div className="flex h-screen overflow-hidden">
-      <Sidebar session={session} notifications={notifications} />
+      <Sidebar
+        session={session}
+        notifications={notifications}
+        defaultCollapsed={sidebarCollapsed}
+      />
       <main className="flex-1 min-h-0 overflow-y-auto px-8 py-6">
         <div className="max-w-6xl mx-auto">{children}</div>
       </main>

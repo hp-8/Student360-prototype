@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge } from "@/components/ui";
-import { computeStudentStage, stageColor, type StudentStage } from "@/lib/domain/stage";
+import { computeStudentStage, type StudentStage } from "@/lib/domain/stage";
 import { SegmentedBar, type Segment } from "@/components/SegmentedBar";
 import { ProgressMeter } from "@/components/ProgressMeter";
 

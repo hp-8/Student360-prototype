@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState, type ComponentType } from "react";
+import { useState, type ComponentType } from "react";
 import {
   LayoutDashboard,
   Users,
@@ -46,7 +46,12 @@ const ICON_BY_HREF: Record<string, ComponentType<{ size?: number; className?: st
   "/admin/templates": ClipboardList,
 };
 
-const COLLAPSE_STORAGE_KEY = "s360-sidebar-collapsed";
+// Persisted in a cookie rather than localStorage so the server layout can read
+// it and render the right width on first paint. localStorage is only readable
+// after hydration, which meant an effect and a visible snap from wide to
+// collapsed on every navigation.
+export const COLLAPSE_COOKIE_NAME = "s360_sidebar_collapsed";
+const COLLAPSE_COOKIE_MAX_AGE = 60 * 60 * 24 * 365;
 
 function initials(name: string) {
   return name
@@ -70,22 +75,19 @@ type NotificationItem = {
 export function Sidebar({
   session,
   notifications,
+  defaultCollapsed = false,
 }: {
   session: SessionUser;
   notifications: NotificationItem[];
+  defaultCollapsed?: boolean;
 }) {
   const navItems = NAV_BY_ROLE[session.role];
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    const stored = window.localStorage.getItem(COLLAPSE_STORAGE_KEY);
-    if (stored === "true") setCollapsed(true);
-  }, []);
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
 
   function toggle() {
     setCollapsed((prev) => {
       const next = !prev;
-      window.localStorage.setItem(COLLAPSE_STORAGE_KEY, String(next));
+      document.cookie = `${COLLAPSE_COOKIE_NAME}=${next}; path=/; max-age=${COLLAPSE_COOKIE_MAX_AGE}; samesite=lax`;
       return next;
     });
   }

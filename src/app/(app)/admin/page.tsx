@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, Field, inputClass, Button } from "@/components/ui";
 import { ROLE_LABEL } from "@/lib/roles";
 import { staffName } from "@/lib/displayName";
+import { requestTime } from "@/lib/requestTime";
 import { StatTiles } from "@/components/dashboard/StatTiles";
 import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
 import { QuickLinksCard } from "@/components/dashboard/QuickLinksCard";
@@ -50,7 +51,7 @@ function RoleCheckboxes({
 export default async function AdminUsersPage() {
   await requireRole("ADMINISTRATOR");
 
-  const now = new Date();
+  const now = await requestTime();
   const upcomingWindow = new Date(now.getTime() + UPCOMING_DEADLINE_WINDOW_MS);
 
   const [users, branches, countryCount, visaRouteCount, upcomingIntakes] = await Promise.all([

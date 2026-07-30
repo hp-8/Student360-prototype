@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Field, inputClass } from "@/components/ui";
 
 type Country = { id: string; name: string };
@@ -20,15 +20,21 @@ export function IntakePicker({
   // directly instead.
   fixedCountryId?: string;
 }) {
-  const [countryId, setCountryId] = useState(fixedCountryId ?? "");
+  // When fixedCountryId is supplied it *is* the country - derive rather than
+  // mirror it into state, so there's nothing to keep in sync.
+  const [pickedCountryId, setPickedCountryId] = useState("");
+  const countryId = fixedCountryId ?? pickedCountryId;
+
   const [intakeChoice, setIntakeChoice] = useState("");
 
-  useEffect(() => {
-    if (fixedCountryId !== undefined) {
-      setCountryId(fixedCountryId);
-      setIntakeChoice("");
-    }
-  }, [fixedCountryId]);
+  // A chosen intake belongs to a country, so changing country - by either
+  // route - invalidates it. React's documented "adjust state during render"
+  // pattern; runs before the children render, so no wasted pass.
+  const [lastCountryId, setLastCountryId] = useState(countryId);
+  if (lastCountryId !== countryId) {
+    setLastCountryId(countryId);
+    setIntakeChoice("");
+  }
 
   const availableIntakes = intakes.filter((i) => i.countryId === countryId);
   const selectedIntake = availableIntakes.find((i) => i.id === intakeChoice);
@@ -42,10 +48,7 @@ export function IntakePicker({
             name="countryId"
             required
             value={countryId}
-            onChange={(e) => {
-              setCountryId(e.target.value);
-              setIntakeChoice("");
-            }}
+            onChange={(e) => setPickedCountryId(e.target.value)}
             className={inputClass}
           >
             <option value="">Select country</option>

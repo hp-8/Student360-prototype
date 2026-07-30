@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { PageHeader, Card, SectionTitle, Badge, EmptyState, Button } from "@/components/ui";
 import { statusColor } from "@/lib/statusColors";
 import { leadName, staffName } from "@/lib/displayName";
+import { requestTime } from "@/lib/requestTime";
 import { StatTiles } from "@/components/dashboard/StatTiles";
 import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
 import { RecentActivityCard } from "@/components/dashboard/RecentActivityCard";
@@ -14,7 +15,8 @@ const RECENT_WINDOW_MS = 30 * 24 * 60 * 60 * 1000;
 export default async function FrontDeskPage() {
   await requireRole("FRONT_DESK", "MANAGER");
 
-  const since = new Date(Date.now() - RECENT_WINDOW_MS);
+  const now = await requestTime();
+  const since = new Date(now.getTime() - RECENT_WINDOW_MS);
 
   const [leads, openCount, convertedRecentCount, lostRecentCount, recentActivity] = await Promise.all([
     prisma.lead.findMany({
@@ -34,7 +36,7 @@ export default async function FrontDeskPage() {
   ]);
 
   const staleLeads = leads.filter(
-    (l) => l.status === "OPEN" && l.createdAt.getTime() < Date.now() - STALE_AFTER_MS
+    (l) => l.status === "OPEN" && l.createdAt.getTime() < now.getTime() - STALE_AFTER_MS
   );
 
   return (

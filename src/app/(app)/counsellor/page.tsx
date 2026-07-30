@@ -5,6 +5,7 @@ import { PageHeader, Card, SectionTitle, Badge, EmptyState } from "@/components/
 import { staffName, studentName } from "@/lib/displayName";
 import { computeStudentStage, stageColor, type StudentStage } from "@/lib/domain/stage";
 import { computeQueueCounts } from "@/lib/domain/workQueue";
+import { requestTime } from "@/lib/requestTime";
 import { QueueTiles } from "@/components/QueueTiles";
 import { StatTiles } from "@/components/dashboard/StatTiles";
 import { ActionItemsCard } from "@/components/dashboard/ActionItemsCard";
@@ -77,8 +78,9 @@ export default async function CounsellorHomePage() {
     stageCounts.set(stage, (stageCounts.get(stage) ?? 0) + 1);
   }
 
+  const now = await requestTime();
   const overdueItems = workItems.filter(
-    (i) => i.status !== "DONE" && i.dueDate && i.dueDate.getTime() < Date.now()
+    (i) => i.status !== "DONE" && i.dueDate && i.dueDate.getTime() < now.getTime()
   );
 
   return (

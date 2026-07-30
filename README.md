@@ -58,4 +58,4 @@ Re-run `npm run seed` any time to reset to this baseline.
 
 ## Roles & visibility
 
-Role-based route protection is enforced in `src/middleware.ts` (coarse, edge-level) and re-checked in every page/server action via `requireRole()` (authoritative). See the build brief for the intended visibility per role.
+Role-based route protection is enforced in `src/proxy.ts` (coarse, edge-level — this is Next 16's rename of what used to be `middleware.ts`) and re-checked in every page/server action via `requireRole()` (authoritative). The proxy layer is a fast redirect, not the security boundary; `requireRole()` is. See the build brief for the intended visibility per role.

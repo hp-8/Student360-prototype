@@ -1,7 +1,6 @@
 import bcrypt from "bcryptjs";
 
 import { prisma } from "../src/lib/prisma";
-import { findDuplicateStudents } from "../src/lib/domain/leads";
 import { reassignCaseManager } from "../src/lib/domain/caseManager";
 import {
   createStudyOption,
@@ -88,7 +87,7 @@ export async function seedDatabase() {
     ["MANAGER", "ADMINISTRATOR"],
     ahmedabad.id
   );
-  const admin = await mkUser("Ayesha Admin", "admin@student360.test", ["ADMINISTRATOR"]);
+  await mkUser("Ayesha Admin", "admin@student360.test", ["ADMINISTRATOR"]);
   const frontDesk = await mkUser("Farah Sheikh", "frontdesk@student360.test", ["FRONT_DESK"], ahmedabad.id, manager.id);
   const counsellor = await mkUser("Chirag Bhatt", "counsellor@student360.test", ["COUNSELLOR"], ahmedabad.id, manager.id);
   const counsellor2 = await mkUser("Sneha Kulkarni", "counsellor2@student360.test", ["COUNSELLOR"], mumbai.id, manager.id);
@@ -314,7 +313,7 @@ export async function seedDatabase() {
   await updateOfferStatus(ananyaGermanyOffer.id, "UNCONDITIONAL", appsTeam.id);
   await updateOfferStatus(ananyaGermanyOffer.id, "ACCEPTED", appsTeam.id);
 
-  const ananyaUkOffer = await recordOffer(
+  await recordOffer(
     {
       studentId: ananya.id,
       countryId: uk.id,
